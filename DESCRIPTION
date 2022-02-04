@@ -8,5 +8,4 @@ Description: Utility functions for retrieving and working with GemsTracker data.
 License: 
 Encoding: UTF-8
 LazyData: true
-Imports:
-        glue >= 1.6.0
+Imports: glue >= 1.6.0
