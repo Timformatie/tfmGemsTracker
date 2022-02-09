@@ -1,7 +1,7 @@
 # API functions
 
 get_api_info <- function(environment) {
-  # get list with api.info
+  # get list with api_info
   #
   # Args:
   #  environment: string with production/acceptance/testing
@@ -46,43 +46,48 @@ get_api_info <- function(environment) {
   return(api_info)
 }
 
-getAccessToken <- function(api_info, check_ssl = TRUE, debug = FALSE) {
+get_access_token <- function(api_info, check_ssl = TRUE, debug = FALSE) {
   # get access token from API which can be used to substract more information from the API
   #
   # Args:
-  #  api.info: list containing information for the api
-  #  bool.checkSSLcert: boolean if the certificate should be checked with the call
-  #  debug: 0/1 if the debug messages should be saved
+  #  api_info: list containing information for the api
+  #  check_ssl: boolean if the certificate should be checked with the call
+  #  debug: boolean if the debug messages should be saved
   #
   # Returns:
   #  data.table containing access token
 
-  require(httr)
-
   # Get Access token ------
-  if (debug == 1) {
-    log_print(paste0("Access token trying to receive from: ", api.info$token.url), console = F)
-    log_print(paste0("Access token with user: ", api.info[["username"]]), console = F)
+  if (debug) {
+    logr::log_print(glue::glue(
+      "Access token trying to receive from: {api_info$token_url}"
+    ), console = FALSE)
+    logr::log_print(glue::glue(
+      "Access token with user: {api_info$username}"
+    ), console = FALSE)
   }
-  res <- POST(api.info$token.url,
-              body = list(grant_type = "password",
-                          username = api.info$username,
-                          password = api.info$password),
-              authenticate(api.info$client_id,
-                           api.info$client_secret),
-              config = httr::config(ssl_verifypeer = bool.checkSSLcert,
-                                    http_version = 2) # for http version 1.1. See curl::curl_symbols('CURL_HTTP_VERSION_')
+
+  response <- httr::POST(
+    api_info$token_url,
+    body = list(grant_type = "password",
+                username = api_info$username,
+                password = api_info$password),
+    authenticate(api_info$client_id,
+                 api_info$client_secret),
+    config = httr::config(ssl_verifypeer = check_ssl,
+                          http_version = 2)
   )
 
   # check if output is correct
-  if (res$status_code != 200) {
-    stop(paste0("status code for access token is: ", res$status_code, ". Something goes wrong with login details"))
+  if (response$status_code != 200) {
+    stop(glue::glue("Status code for access token is: {response$status_code}.",
+                    "Something goes wrong with login details"))
   } else {
     message("Access token correctly obtained.")
   }
-  access.token <- content(res)$access_token
+  access_token <- content(response)$access_token
 
-  return(access.token)
+  return(access_token)
 }
 
 getSettings <- function(env.gems, settings) {
@@ -295,10 +300,10 @@ getResponses <- function(taskIDs, access.token, basicResponseURL, language = "nl
   return(responses)
 }
 
-getNewToken <- function(access.token, old.token, api.info, bool.checkSSLcert = T) {
+getNewToken <- function(access.token, old.token, api_info, bool.checkSSLcert = T) {
   require(httr)
 
-  newTokenURL <- paste0(api.info$new.tokenurl, old.token)
+  newTokenURL <- paste0(api_info$new.tokenurl, old.token)
 
   res <- PATCH(newTokenURL,
                body = list(comment = "oeps, deze was fout"),
@@ -315,10 +320,10 @@ getNewToken <- function(access.token, old.token, api.info, bool.checkSSLcert = T
   }
 }
 
-changeExecutionPeriod <- function(access.token, token, api.info, bool.checkSSLcert = T, jsonData) {
+changeExecutionPeriod <- function(access.token, token, api_info, bool.checkSSLcert = T, jsonData) {
   require(httr)
 
-  newTokenURL <- paste0(api.info$taskurl.clean, token)
+  newTokenURL <- paste0(api_info$taskurl.clean, token)
 
   res <- PATCH(newTokenURL,
                body = jsonData,
@@ -431,11 +436,11 @@ getAllData <- function(patientID,
   return(data)
 }
 
-addQuestionnaire <- function(access.token, api.info, bool.checkSSLcert = T,
+addQuestionnaire <- function(access.token, api_info, bool.checkSSLcert = T,
                              respondenTrackId, surveyId, roundDescription, validFrom, validUntil, roundOrder = NULL){
   require(httr)
 
-  url <- paste0(api.info$insertQuestionnaire)
+  url <- paste0(api_info$insertQuestionnaire)
 
   jsonData <- list(respondentTrackId = respondenTrackId,
                    surveyId = surveyId,

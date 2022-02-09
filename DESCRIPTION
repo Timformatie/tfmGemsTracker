@@ -9,4 +9,5 @@ License:
 Encoding: UTF-8
 LazyData: true
 Imports:
-  glue (>= 1.6.0)
+  glue (>= 1.6.0),
+  httr
