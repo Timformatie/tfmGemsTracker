@@ -1,0 +1,18 @@
+default:
+    gt:
+        token_url: "api/access_token"
+        patient_url: "api/fhir/patient/"
+        task_url: "api/fhir/questionnaire-task?per_page=1000"
+        task_url_clean: "api/fhir/questionnaire-task/"
+        response_url: "api/fhir/questionnaire-response/"
+        careplan_url: "api/fhir/care-plan?per_page=100&status=active&patient="
+        diagnosis_url: "api/ichom/diagnosis?per_page=1000"
+        outcome_variables_url: "api/outcome-variables?treatmentId="
+        reference_url: "api/reference-data?"
+        dataset_url: "api/data-set/data/"
+        new_token_url: "api/correct-token/"
+        insert_questionnaire: "api/insert-track-token"
+        return_respondent: "respondent/show/"
+        other_organisation: "api/other-patient-numbers/"
+    dashboard:
+        base: "https://analyse.equipezorgbedrijven.nl/shiny/artsendashboard/"
