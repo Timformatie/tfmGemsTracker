@@ -18,7 +18,7 @@ get_api_info <- function(environment) {
     "PULSE_USERNAME missing" = Sys.getenv("PULSE_USERNAME") != "",
     "PULSE_PASSWORD missing" = Sys.getenv("PULSE_PASSWORD") != "",
     "PULSE_ENCRYPTION_KEY missing" = Sys.getenv("PULSE_ENCRYPTION_KEY") != "",
-    "APP_BASE_URL missing" = Sys.getenv("APP_BASE_URL") != "",
+    "APP_BASE_URL missing" = Sys.getenv("APP_BASE_URL") != ""
   )
 
   api_info <- list(
@@ -38,7 +38,7 @@ get_api_info <- function(environment) {
   )
 
   full_urls <- paste0(api_info$base_url, api_urls)
-  names(full_urls) <- names(full_urls)
+  names(full_urls) <- names(api_urls)
 
   # TODO: why vector of these 3, are the last 2 even used?
   api_info <- c(api_info, full_urls, dashboard_urls)
@@ -72,7 +72,7 @@ get_access_token <- function(api_info, check_ssl = TRUE, debug = FALSE) {
     body = list(grant_type = "password",
                 username = api_info$username,
                 password = api_info$password),
-    authenticate(api_info$client_id,
+    httr::authenticate(api_info$client_id,
                  api_info$client_secret),
     config = httr::config(ssl_verifypeer = check_ssl,
                           http_version = 2)
