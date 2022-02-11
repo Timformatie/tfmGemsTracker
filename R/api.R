@@ -80,14 +80,77 @@ get_access_token <- function(api_info, check_ssl = TRUE, debug = FALSE) {
 
   # check if output is correct
   if (response$status_code != 200) {
-    stop(glue::glue("Status code for access token is: {response$status_code}.",
+    stop(glue::glue("Status code for access token is: {response$status_code}. ",
                     "Something goes wrong with login details"))
   } else {
     message("Access token correctly obtained.")
   }
-  access_token <- content(response)$access_token
+  access_token <- httr::content(response)$access_token
 
   return(access_token)
+}
+
+decode_url_key <- function(hash_key, url_key, debug = FALSE) {
+  # decode the key in the url to get a password for the access token
+  #
+  # Args:
+  #  hashKey: key that is given once to decrypt
+  #  urlKey: code in the url
+  #
+  # Returns:
+  #  string containing the password which can be used to get an access token
+
+  # urlKey =
+  # decode the url key
+  data_parameter <- URLdecode(url_key)
+
+  data_decoded <- rawToChar(openssl::base64_decode(data_parameter))
+  if (debug) {
+    logr::log_print(
+      glue::glue("data_decoded is: {data_decoded}"), console = FALSE
+    )
+  }
+
+  n_last <- 1 # Specify number of characters to extract
+  last_char <- substr(data_decoded, nchar(data_decoded) - n_last + 1, nchar(data_decoded)) # Extract last three characters
+
+  if (last_char != "}") {
+    if (last_char != '"') {
+      data_decoded = paste0(data_decoded, '"}')
+    } else {
+      data_decoded = paste0(data_decoded, "}")
+    }
+  }
+  data_decoded = paste0(data_decoded, collapse = "")
+
+  if (debug) {
+    logr::log_print(
+      paste0("data_decoded after paste is: ", data_decoded), console = FALSE
+    )
+  }
+
+  data_package <- fromJSON(data_decoded);
+  iv <- openssl::base64_decode(data_package[["iv"]])
+  data <- openssl::base64_decode(data_package[["data"]])
+  key <- openssl::base64_decode(hash_key)
+
+  answer <- openssl::aes_cbc_decrypt(
+    data,key = key, iv = iv
+  )
+
+  password <- rawToChar(answer)
+
+  if ("group" %in% names(data_package)) {
+    group <- data_package[["group"]]
+  } else {
+    group <- ""
+  }
+
+  return(list(
+    password = paste0("key:", password),
+    username = data_package[["user"]],
+    group = group
+  ))
 }
 
 getSettings <- function(env.gems, settings) {
@@ -474,60 +537,3 @@ getReturnURL <- function(baseURL, `patient-nr`, `organisation-id`, env){
   return(url.encoded)
 }
 
-decodeURLkey <- function(hashKey, urlKey, debug = 0) {
-  # decode the key in the url to get a password for the access token
-  #
-  # Args:
-  #  hashKey: key that is given once to decrypt
-  #  urlKey: code in the url
-  #
-  # Returns:
-  #  string containing the password which can be used to get an access token
-
-  require(openssl)
-  require(jsonlite)
-  require(urltools)
-  # urlKey =
-  # decode the url key
-  dataParameter <- URLdecode(urlKey)
-
-  dataDecoded <- rawToChar(base64_decode(dataParameter))
-  if (debug == 1) {
-    log_print(paste0("dataDecoded is: ", dataDecoded), console = F)
-  }
-  n_last <- 1                                # Specify number of characters to extract
-  lastChar <- substr(dataDecoded, nchar(dataDecoded) - n_last + 1, nchar(dataDecoded)) # Extract last three characters
-  if (lastChar != "}") {
-    if (lastChar != '"') {
-      dataDecoded = paste0(dataDecoded, '"}')
-    } else {
-      dataDecoded = paste0(dataDecoded, "}")
-    }
-  }
-  dataDecoded = paste0(dataDecoded, collapse = "")
-
-  if (debug == 1) {
-    log_print(paste0("dataDecoded after paste is: ", dataDecoded), console = F)
-  }
-
-  dataPackage <- fromJSON(dataDecoded);
-  iv <- base64_decode(dataPackage[["iv"]])
-  data <- base64_decode(dataPackage[["data"]])
-  key <- base64_decode(hashKey)
-
-  answer <- aes_cbc_decrypt(data,
-                            key = key,
-                            iv = iv)
-
-  password <- rawToChar(answer)
-
-  if ("group" %in% names(dataPackage)) {
-    group = dataPackage[["group"]]
-  } else {
-    group <- ""
-  }
-
-  return(list(password = paste0("key:", password),
-              username = dataPackage[["user"]],
-              group = group))
-}
