@@ -1,5 +1,6 @@
 # API functions
 
+# Get api info
 get_api_info <- function(environment) {
   # get list with api_info
   #
@@ -46,6 +47,7 @@ get_api_info <- function(environment) {
   return(api_info)
 }
 
+# Get access token
 get_access_token <- function(api_info, check_ssl = TRUE, debug = FALSE) {
   # get access token from API which can be used to substract more information from the API
   #
@@ -90,6 +92,7 @@ get_access_token <- function(api_info, check_ssl = TRUE, debug = FALSE) {
   return(access_token)
 }
 
+# Decode url key
 decode_url_key <- function(hash_key, url_key, debug = FALSE) {
   # decode the key in the url to get a password for the access token
   #
@@ -153,6 +156,96 @@ decode_url_key <- function(hash_key, url_key, debug = FALSE) {
   ))
 }
 
+# Get query data
+get_query_data <- function(
+  url,
+  token,
+  output_type = "parsed",
+  language = "nl",
+  check_ssl = TRUE,
+  debug = FALSE
+) {
+  # Gives back data from the api. based on a request
+  #
+  # Args:
+  #   url: a string with the url to get the data from
+  #   token: access token which is used for authentication
+  #
+  # Returns:
+  #   list with data from the request
+
+  #TODO: Use trycatch in case something is wrong
+  if (debug == 1) {
+    logr::log_print(
+      glue::glue("Try to retrieve data from {url}"), console = FALSE
+    )
+  }
+  # start.time <- Sys.time()
+  req <- httr::GET(
+    url,
+    httr::add_headers(
+      Authorization = glue::glue("Bearer {token}"),
+      `Accept-Language` = language
+    ),
+    config = httr::config(
+      ssl_verifypeer = check_ssl,
+      http_version = 2
+    )
+  )
+
+  if (req$status_code == 200) {
+    if (debug == 1) {
+      logr::log_print(
+        glue::glue("data from url {url} correctly obtained"), console = FALSE
+      )
+    }
+    json_data <- httr::content(req, as = output_type, encoding = "UTF-8")
+    return(json_data)
+  } else {
+    if (debug) {
+      logr::log_print(glue::glue(
+        "Data from url {url} NOT correctly obtained"
+      ), console = FALSE)
+      logr::log_print(glue::glue(
+        "Error in query: {url} with status code: {req$status_code}"
+      ), console = FALSE)
+    }
+    return("")
+  }
+}
+
+# Get careplan info
+getCareplanInfo <- function(
+  patient_id,
+  access_token,
+  base_carepath_url,
+  language = "nl",
+  check_ssl = TRUE,
+  debug = FALSE,
+  tracks = NULL
+) {
+
+  carepath_url = paste0(base_carepath_url, patient_id) #, "&status=active"
+  dt_careplan <- getQueryData(url = carepathURL, token = access.token, outputType = "text", bool.checkSSLcert = bool.checkSSLcert, debug = debug)
+
+  if (!is.null(dt.careplan)) {
+    if (dt.careplan != "") {
+      dt.careplan <- fromJSON(dt.careplan)
+      dt.careplan = as.data.table(dt.careplan)
+
+      if (!is.null(tracks)) {
+        dt.careplan = dt.careplan[title %in% tracks]
+      }
+    } else {
+      dt.careplan <- NULL
+    }
+    return(dt.careplan)
+  } else {
+    return(NULL)
+  }
+
+}
+
 getSettings <- function(env.gems, settings) {
   mapping <- settings$`surveys-mapping`
   mapping = mapping[, survey.id := .SD, .SDcols = paste0("survey.id.", env.gems)]
@@ -183,48 +276,6 @@ getSettings <- function(env.gems, settings) {
   return(settings)
 }
 
-getQueryData <- function(url, token, outputType = "parsed", language = "nl", bool.checkSSLcert = T,
-                         debug = 0) {
-  # Gives back data from the api. based on a request
-  #
-  # Args:
-  #   url: a string with the url to get the data from
-  #   token: access token which is used for authentication
-  #
-  # Returns:
-  #   list with data from the request
-
-  require(httr)
-
-  #TODO: Use trycatch in case something is wrong
-  if (debug == 1) {
-    log_print(paste0("try to retrieve data from ", url), console = F)
-  }
-  # start.time <- Sys.time()
-  req <- GET(url,
-             add_headers(Authorization = paste("Bearer", token, sep = " "), `Accept-Language` = language),
-             config = httr::config(ssl_verifypeer = bool.checkSSLcert,
-                                   http_version = 2)
-  )
-
-  if (req$status_code == 200) {
-    if (debug == 1) {
-      log_print(paste0("data from url ", url, " correctly obtained"), console = F)
-    }
-    json.data <- content(req, as = outputType, encoding = "UTF-8")
-    return(json.data)
-  } else {
-    if (debug == 1) {
-      log_print(paste0("data from url ", url, " NOT correctly obtained"), console = F)
-      log_print(paste0("Fout bij query: ", url, " met status code: ", req$status_code), console = F)
-    }
-    return("")
-  }
-  # end.time <- Sys.time()
-  # print(paste0("De tijd om data op te halen was: ", end.time-start.time))
-  #
-}
-
 getPatientInfo <- function(patientID, access.token, basicPatientURL, language = "nl", bool.checkSSLcert = T, debug = 0) {
   require(jsonlite)
 
@@ -247,28 +298,6 @@ getOrganisation <- function(patient, organisation, access.token, basicOrganisati
   dt.organisations <- fromJSON(dt.organisations)
   dt.organisations = as.data.table(dt.organisations)
   return(dt.organisations)
-}
-
-getCareplanInfo <- function(patientID, access.token, basicCarepathURL, language = "nl", bool.checkSSLcert = T, tracks = NULL, debug = 0) {
-  carepathURL = paste0(basicCarepathURL, patientID) #, "&status=active"
-  dt.careplan <- getQueryData(url = carepathURL, token = access.token, outputType = "text", bool.checkSSLcert = bool.checkSSLcert, debug = debug)
-
-  if (!is.null(dt.careplan)) {
-    if (dt.careplan != "") {
-      dt.careplan <- fromJSON(dt.careplan)
-      dt.careplan = as.data.table(dt.careplan)
-
-      if (!is.null(tracks)) {
-        dt.careplan = dt.careplan[title %in% tracks]
-      }
-    } else {
-      dt.careplan <- NULL
-    }
-    return(dt.careplan)
-  } else {
-    return(NULL)
-  }
-
 }
 
 getTaskInfo <- function(patientID, access.token, basicTaskURL, language = "nl", bool.checkSSLcert = T, tracks = NULL,
