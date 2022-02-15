@@ -195,8 +195,8 @@ get_query_data <- function(
 
   if (req$status_code != 200) {
     stop(glue::glue(
-      "Request failed with status code {req$status_code}. ",
-      "{httr::content(req)$error}"
+      "Request failed with status code {req$status_code}. "
+      #"{httr::content(req)$error}"
     ))
     if (debug) {
       logr::log_print(glue::glue(
@@ -355,6 +355,30 @@ get_patient_info <- function(
   return(patient_info)
 }
 
+# Get organisation (for given patient)
+# TODO: should this return organisations or patient numbers?
+get_organisations <- function(
+  patient_number,
+  organisation_id,
+  access_token,
+  base_organisation_url,
+  check_ssl = TRUE,
+  debug = FALSE
+) {
+
+  organisation_url <- glue::glue("{base_organisation_url}{patient_number}/{organisation_id}")
+  dt_organisations <- get_query_data(
+    url = organisation_url,
+    token = access_token,
+    output_type = "text",
+    check_ssl = check_ssl,
+    debug = debug
+  )
+
+  dt_organisations <- jsonlite::fromJSON(dt_organisations)
+  dt_organisations = data.table::as.data.table(dt_organisations)
+  return(dt_organisations)
+}
 
 
 
@@ -391,15 +415,6 @@ getSettings <- function(env.gems, settings) {
   names(settings) <- settingNames
 
   return(settings)
-}
-
-getOrganisation <- function(patient, organisation, access.token, basicOrganisationURL, bool.checkSSLcert, debug = 0) {
-  url <- paste0(basicOrganisationURL, patient,"/", organisation)
-  dt.organisations <- getQueryData(url = url, token = access.token, outputType = "text", bool.checkSSLcert = bool.checkSSLcert, debug = debug)
-
-  dt.organisations <- fromJSON(dt.organisations)
-  dt.organisations = as.data.table(dt.organisations)
-  return(dt.organisations)
 }
 
 getResponses <- function(taskIDs, access.token, basicResponseURL, language = "nl", bool.checkSSLcert = T,
