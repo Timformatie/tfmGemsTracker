@@ -193,15 +193,7 @@ get_query_data <- function(
     )
   )
 
-  if (req$status_code == 200) {
-    if (debug) {
-      logr::log_print(
-        glue::glue("data from url {url} correctly obtained"), console = FALSE
-      )
-    }
-    json_data <- httr::content(req, as = output_type, encoding = "UTF-8")
-    return(json_data)
-  } else {
+  if (req$status_code != 200) {
     if (debug) {
       logr::log_print(glue::glue(
         "Data from url {url} NOT correctly obtained"
@@ -210,22 +202,30 @@ get_query_data <- function(
         "Error in query: {url} with status code: {req$status_code}"
       ), console = FALSE)
     }
-    return("")
+    return(NULL)
   }
+
+  if (debug) {
+    logr::log_print(
+      glue::glue("data from url {url} correctly obtained"), console = FALSE
+    )
+  }
+  json_data <- httr::content(req, as = output_type, encoding = "UTF-8")
+  return(json_data)
 }
 
 # Get careplan info
 get_careplan_info <- function(
   patient_id,
   access_token,
-  base_carepath_url,
+  base_careplan_url,
   language = "nl",
   check_ssl = TRUE,
   debug = FALSE,
   tracks = NULL
 ) {
 
-  carepath_url = paste0(base_carepath_url, patient_id)
+  carepath_url = paste0(base_careplan_url, patient_id)
   dt_careplan <- get_query_data(
     url = carepath_url,
     token = access_token,
@@ -234,7 +234,7 @@ get_careplan_info <- function(
     debug = debug
   )
 
-  if (is.null(dt_careplan) | dt_careplan == "") {
+  if (is.null(dt_careplan)) {
     return(NULL)
   }
 
@@ -246,6 +246,99 @@ get_careplan_info <- function(
   return(dt_careplan)
 
 }
+
+# Get task info
+get_task_info <- function(
+  patient_id,
+  access_token,
+  base_task_url,
+  language = "nl",
+  check_ssl = TRUE,
+  debug = FALSE,
+  tracks = NULL,
+  careplan_ids = NULL
+) {
+
+  if (!is.null(careplan_ids)) {
+    task_url = glue::glue(
+      "{base_task_url}&carePlan=[{paste0(careplan_ids, collapse = ',')}]"
+    )
+  }
+
+  task_info <- get_query_data(
+    url = task_url,
+    token = access_token,
+    output_type = "text",
+    language = language,
+    check_ssl = check_ssl,
+    debug = debug
+  )
+
+  if (is.null(task_info)) {
+    return(NULL)
+  }
+
+  task_info <- jsonlite::fromJSON(task_info, flatten = TRUE)
+
+  lst_elements <-  names(task_info)[sapply(task_info, class) == "list"]
+  if (length(lst_elements) > 0) {
+    for (element in lst_elements) {
+      # transform list elements to whole rows with multiple columns
+      data <- data.table::rbindlist(
+        task_info[[element]],
+        idcol = TRUE,
+        use.names = TRUE,
+        fill = TRUE
+      )
+      change_cols <- colnames(data)[!colnames(data) %in% c("type", ".id")]
+      data = data[
+        , (change_cols) := lapply(.SD, na.rm = TRUE, as.character),
+        .SDcols = change_cols
+      ]
+      data_long = data.table::melt(
+        data, id.vars = c(".id", "type"), measure.vars = change_cols
+      )
+
+      data_long = data_long[!is.na(value)][
+        ,count := .N, by = c("type", ".id")
+      ][
+        , col_name := ifelse(count > 1, paste0(type, ".", variable), type)
+      ]
+      y = data_long[, .(col_name, value, `.id`)][order(`.id`)]
+      z = data.table::dcast(y, `.id` ~col_name, value.var = "value")
+      dt_element <- z[, `.id` := NULL]
+
+      task_info = task_info[-which(names(task_info) == element)]
+      task_info = cbind(task_info, dt_element)
+    }
+  }
+  task_info <- data.table::as.data.table(task_info)
+
+  if (!is.null(tracks)) {
+    task_info = task_info[track %in% tracks]
+  }
+
+  return(task_info)
+}
+
+# Get patient info
+getPatientInfo <- function(patientID, access.token, basicPatientURL, language = "nl", bool.checkSSLcert = T, debug = 0) {
+  require(jsonlite)
+
+  patientURL = paste0(basicPatientURL, patientID)
+  patientInfo <- getQueryData(url = patientURL, token = access.token, outputType = "text", language = language, bool.checkSSLcert = bool.checkSSLcert)
+  # for empty lists
+  if (patientInfo != "") {
+    patientInfo = as.data.table(t((unlist(fromJSON(patientInfo)))))
+
+    return(patientInfo)
+  } else {
+    return(NULL)
+  }
+}
+
+
+#######
 
 getSettings <- function(env.gems, settings) {
   mapping <- settings$`surveys-mapping`
@@ -277,21 +370,6 @@ getSettings <- function(env.gems, settings) {
   return(settings)
 }
 
-getPatientInfo <- function(patientID, access.token, basicPatientURL, language = "nl", bool.checkSSLcert = T, debug = 0) {
-  require(jsonlite)
-
-  patientURL = paste0(basicPatientURL, patientID)
-  patientInfo <- getQueryData(url = patientURL, token = access.token, outputType = "text", language = language, bool.checkSSLcert = bool.checkSSLcert)
-  # for empty lists
-  if (patientInfo != "") {
-    patientInfo = as.data.table(t((unlist(fromJSON(patientInfo)))))
-
-    return(patientInfo)
-  } else {
-    return(NULL)
-  }
-}
-
 getOrganisation <- function(patient, organisation, access.token, basicOrganisationURL, bool.checkSSLcert, debug = 0) {
   url <- paste0(basicOrganisationURL, patient,"/", organisation)
   dt.organisations <- getQueryData(url = url, token = access.token, outputType = "text", bool.checkSSLcert = bool.checkSSLcert, debug = debug)
@@ -299,52 +377,6 @@ getOrganisation <- function(patient, organisation, access.token, basicOrganisati
   dt.organisations <- fromJSON(dt.organisations)
   dt.organisations = as.data.table(dt.organisations)
   return(dt.organisations)
-}
-
-getTaskInfo <- function(patientID, access.token, basicTaskURL, language = "nl", bool.checkSSLcert = T, tracks = NULL,
-                        carePlan = NULL, debug = 0) {
-
-  require(httr)
-  taskURL <- basicTaskURL
-  if (!is.null(carePlan)) {
-    taskURL = paste0(taskURL, "&carePlan=[", paste0(carePlan, collapse = ","),"]")
-  }
-  taskInfo <- getQueryData(url = taskURL, token = access.token, outputType = "text", language = language, bool.checkSSLcert = bool.checkSSLcert,
-                           debug = debug)
-
-  if (taskInfo != "") {
-    taskInfo <- fromJSON(taskInfo, flatten = T)
-
-    lst.elements <-  names(taskInfo)[sapply(taskInfo, class) == "list"]
-    if (length(lst.elements) > 0){
-      for (element in lst.elements){
-        # transform list elements to whole rows with multiple columns
-        test <- rbindlist(taskInfo[[element]], idcol = T, use.names = T, fill = T)
-        changeCols <- colnames(test)[!colnames(test) %in% c("type", ".id")]
-        test = test[, (changeCols) := lapply(.SD,na.rm = T, as.character),.SDcols = changeCols]
-        test2 = melt(test, id.vars = c(".id", "type"),
-                     measure.vars = changeCols)
-
-        test2 = test2[!is.na(value)][,count := .N, by = c("type", ".id")][, colName := ifelse(count > 1, paste0(type, ".", variable), type)]
-        y = test2[,.(colName, value, `.id`)][order(`.id`)]
-        z = dcast(y, `.id` ~colName, value.var = "value")
-        dt.element <- z[, `.id` := NULL]
-
-        taskInfo = taskInfo[-which(names(taskInfo) == element)]
-        taskInfo = cbind(taskInfo, dt.element)
-      }
-    }
-    taskInfo <- as.data.table(taskInfo)
-
-    if (!is.null(tracks)) {
-      taskInfo = taskInfo[track %in% tracks]
-    }
-
-  } else {
-    taskInfo <- NULL
-  }
-
-  return(taskInfo)
 }
 
 getResponses <- function(taskIDs, access.token, basicResponseURL, language = "nl", bool.checkSSLcert = T,
@@ -452,7 +484,7 @@ getAllData <- function(patientID,
   #   basicReponseURL: string with url to get response data
   #
   # Returns:
-  #   list with data in the categories patientInfo, taskInfo and responses
+  #   list with data in the categories patientInfo, task_info and responses
 
   require(jsonlite)
 
@@ -461,11 +493,11 @@ getAllData <- function(patientID,
   # patientInfo = fromJSON(patientInfo) %>% as.data.frame
   data[["patientInfo"]] <- getPatientInfo(patientID, access.token, basicPatientURL, language = language, bool.checkSSLcert = bool.checkSSLcert)
 
-  taskInfo <- getTaskInfo(patientID, access.token, basicTaskURL = paste0(basicTaskURL, patient), language = language, bool.checkSSLcert = bool.checkSSLcert, tracks = tracks)
-  data[["taskInfo"]] <- taskInfo
+  task_info <- gettask_info(patientID, access.token, basicTaskURL = paste0(basicTaskURL, patient), language = language, bool.checkSSLcert = bool.checkSSLcert, tracks = tracks)
+  data[["task_info"]] <- task_info
 
-  if ("status" %in% colnames(taskInfo)) {
-    taskIDs <- unique(taskInfo[status == "completed", id])
+  if ("status" %in% colnames(task_info)) {
+    taskIDs <- unique(task_info[status == "completed", id])
 
     system.time(responses <- getResponses(taskIDs,
                                           access.token,
