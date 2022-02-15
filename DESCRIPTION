@@ -9,5 +9,10 @@ License:
 Encoding: UTF-8
 LazyData: true
 Imports:
+  config (>= 0.3.1),
+  data.table (>= 1.14.2),
   glue (>= 1.6.0),
-  httr
+  httr (>= 1.4.2),
+  jsonlite (>= 1.7.2),
+  logr (>= 1.2.7),
+  openssl (>= 1.4.6)
