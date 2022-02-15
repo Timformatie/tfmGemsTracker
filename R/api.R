@@ -400,44 +400,55 @@ get_responses <- function(
 ) {
 
   n_tasks <- length(task_ids)
-  responseURL <- paste0(basicResponseURL, "?id=[", paste0(task_ids, collapse = ","), "]&per_page=", nTaskIDs)
-  res <- getQueryData(url = responseURL, token = access.token, outputType = "parsed", language = language, bool.checkSSLcert = bool.checkSSLcert, debug = debug)
+  response_url <- glue::glue(
+    "{base_response_url}?id=[{paste0(task_ids, collapse = ',')}]&per_page=",
+    "{n_tasks}"
+  )
 
-  responses <- lapply(seq_len(n_tasks), function(id){
-    tmp <- res[[id]]
+  tasks <- get_query_data(
+    url = response_url,
+    token = access_token,
+    output_type = "parsed",
+    language = language,
+    check_ssl = check_ssl,
+    debug = debug
+  )
 
-    if (tmp$status == "completed"){
-      lst.imported <-tmp
+  responses <- lapply(tasks, function(task) {
 
-      itemInfo <- lapply(seq_len(length(lst.imported$item)), function(x){
-        tmp <- as.list(unlist(lst.imported$item[[x]]))
-        return(tmp)
-      })
-      itemInfo <- rbindlist(itemInfo, use.names = T, fill = T)
-      lst.imported = lst.imported[-which(names(lst.imported) %in% "item")]
-
-      index.lists <- unname(which(sapply(lst.imported, is.list) == T))
-
-      # create data.table from all elements which are not a list
-      if (length(index.lists) == 0) {
-        dt <- as.data.table(lst.imported)
-      } else {
-        dt = as.data.table(lst.imported[-index.lists])
-      }
-
-      dt = cbind(dt, itemInfo)
-
-      return(dt)
-    } else {
-      if (debug) {
-        warning(paste0("Task ", task_ids[id], " has no data"))
-      }
+    if (task$status != "completed") {
+      if (debug) {warning(glue::glue("Task {task$id} has no data"))}
       return(NULL)
     }
+
+    # Flatten nested item data
+    item_info <- lapply(task$item, function(item) {
+      info <- as.list(unlist(item))
+      return(info)
+    })
+    item_info <- data.table::rbindlist(item_info, use.names = TRUE, fill = TRUE)
+
+    #task = task[-which(names(task) %in% "item")]
+    task = task[!grepl("item", names(task))]
+
+    # Create data.table from all elements which are not a list
+    index_lists <- unname(which(sapply(task, is.list) == TRUE))
+    if (length(index_lists) == 0) {
+      dt <- data.table::as.data.table(task)
+    } else {
+      dt = data.table::as.data.table(task[-index_lists])
+    }
+
+    dt = cbind(dt, item_info)
+
+    return(dt)
+
   })
-  responses <- rbindlist(responses, use.names = T, fill = T)
+
+  responses <- data.table::rbindlist(responses, use.names = TRUE, fill = TRUE)
 
   return(responses)
+
 }
 
 
