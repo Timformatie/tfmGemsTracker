@@ -194,6 +194,10 @@ get_query_data <- function(
   )
 
   if (req$status_code != 200) {
+    stop(glue::glue(
+      "Request failed with status code {req$status_code}. ",
+      "{httr::content(req)$error}"
+    ))
     if (debug) {
       logr::log_print(glue::glue(
         "Data from url {url} NOT correctly obtained"
@@ -225,9 +229,9 @@ get_careplan_info <- function(
   tracks = NULL
 ) {
 
-  carepath_url = paste0(base_careplan_url, patient_id)
+  careplan_url = paste0(base_careplan_url, patient_id)
   dt_careplan <- get_query_data(
-    url = carepath_url,
+    url = careplan_url,
     token = access_token,
     output_type = "text",
     check_ssl = check_ssl,
@@ -322,20 +326,39 @@ get_task_info <- function(
 }
 
 # Get patient info
-getPatientInfo <- function(patientID, access.token, basicPatientURL, language = "nl", bool.checkSSLcert = T, debug = 0) {
-  require(jsonlite)
+get_patient_info <- function(
+  patient_id,
+  access_token,
+  base_patient_url,
+  language = "nl",
+  check_ssl = TRUE,
+  debug = FALSE
+) {
 
-  patientURL = paste0(basicPatientURL, patientID)
-  patientInfo <- getQueryData(url = patientURL, token = access.token, outputType = "text", language = language, bool.checkSSLcert = bool.checkSSLcert)
-  # for empty lists
-  if (patientInfo != "") {
-    patientInfo = as.data.table(t((unlist(fromJSON(patientInfo)))))
+  patient_url = paste0(base_patient_url, patient_id)
+  patient_info <- get_query_data(
+    url = patient_url,
+    token = access_token,
+    output_type = "text",
+    language = language,
+    check_ssl = check_ssl
+  )
 
-    return(patientInfo)
-  } else {
+  if (is.null(patient_info)) {
     return(NULL)
   }
+
+  patient_info = data.table::as.data.table(t((unlist(jsonlite::fromJSON(
+    patient_info
+  )))))
+
+  return(patient_info)
 }
+
+
+
+
+
 
 
 #######
