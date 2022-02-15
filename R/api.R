@@ -1,6 +1,7 @@
 # API functions
 
 # Get api info
+#' @export
 get_api_info <- function(environment) {
   # get list with api_info
   #
@@ -48,6 +49,7 @@ get_api_info <- function(environment) {
 }
 
 # Get access token
+#' @export
 get_access_token <- function(api_info, check_ssl = TRUE, debug = FALSE) {
   # get access token from API which can be used to substract more information from the API
   #
@@ -155,6 +157,7 @@ get_query_data <- function(
 }
 
 # Get careplan info
+#' @export
 get_careplan_info <- function(
   patient_id,
   access_token,
@@ -188,6 +191,7 @@ get_careplan_info <- function(
 }
 
 # Get task info
+#' @export
 get_task_info <- function(
   patient_id,
   access_token,
@@ -271,6 +275,7 @@ get_task_info <- function(
 }
 
 # Get patient info
+#' @export
 get_patient_info <- function(
   patient_id,
   access_token,
@@ -302,6 +307,7 @@ get_patient_info <- function(
 
 # Get organisation (for given patient)
 # TODO: should this return organisations or patient numbers?
+#' @export
 get_organisations <- function(
   patient_number,
   organisation_id,
@@ -326,6 +332,7 @@ get_organisations <- function(
 }
 
 # Get responses
+#' @export
 get_responses <- function(
   task_ids,
   access_token,
@@ -389,6 +396,7 @@ get_responses <- function(
 
 # Get new token
 # TODO: what is the difference between access_token and old_token?
+#' @export
 get_new_token <- function(
   access_token,
   old_token,
