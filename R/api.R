@@ -284,33 +284,42 @@ get_task_info <- function(
 
   task_info <- jsonlite::fromJSON(task_info, flatten = TRUE)
 
-  lst_elements <-  names(task_info)[sapply(task_info, class) == "list"]
-  if (length(lst_elements) > 0) {
-    for (element in lst_elements) {
-      # transform list elements to whole rows with multiple columns
-      data <- data.table::rbindlist(
+  # Unlist nested elements
+  nested_elements <-  names(task_info)[sapply(task_info, class) == "list"]
+  if (length(nested_elements) > 0) {
+    for (element in nested_elements) {
+      # Transform nested list elements to whole rows with multiple columns
+      nested_data <- data.table::rbindlist(
         task_info[[element]],
         idcol = TRUE,
         use.names = TRUE,
         fill = TRUE
       )
-      change_cols <- colnames(data)[!colnames(data) %in% c("type", ".id")]
-      data = data[
+      # Change column type to character
+      change_cols <- colnames(nested_data)[
+        !colnames(nested_data) %in% c("type", ".id")
+      ]
+      nested_data = nested_data[
         , (change_cols) := lapply(.SD, na.rm = TRUE, as.character),
         .SDcols = change_cols
       ]
+      # Transform to long format
       data_long = data.table::melt(
-        data, id.vars = c(".id", "type"), measure.vars = change_cols
+        nested_data, id.vars = c(".id", "type"), measure.vars = change_cols
       )
-
+      # Add count and column name
       data_long = data_long[!is.na(value)][
         ,count := .N, by = c("type", ".id")
       ][
         , col_name := ifelse(count > 1, paste0(type, ".", variable), type)
       ]
-      y = data_long[, .(col_name, value, `.id`)][order(`.id`)]
-      z = data.table::dcast(y, `.id` ~col_name, value.var = "value")
-      dt_element <- z[, `.id` := NULL]
+
+      # Only keep relevant columns and transform back to wide format
+      data_sub = data_long[, .(col_name, value, `.id`)][order(`.id`)]
+      data_sub_wide = data.table::dcast(
+        data_sub, `.id` ~col_name, value.var = "value"
+      )
+      dt_element <- data_sub_wide[, `.id` := NULL]
 
       task_info = task_info[-which(names(task_info) == element)]
       task_info = cbind(task_info, dt_element)
@@ -380,7 +389,56 @@ get_organisations <- function(
   return(dt_organisations)
 }
 
+# Get responses
+get_responses <- function(
+  task_ids,
+  access_token,
+  base_response_url,
+  language = "nl",
+  check_ssl = TRUE,
+  debug = FALSE
+) {
 
+  n_tasks <- length(task_ids)
+  responseURL <- paste0(basicResponseURL, "?id=[", paste0(task_ids, collapse = ","), "]&per_page=", nTaskIDs)
+  res <- getQueryData(url = responseURL, token = access.token, outputType = "parsed", language = language, bool.checkSSLcert = bool.checkSSLcert, debug = debug)
+
+  responses <- lapply(seq_len(n_tasks), function(id){
+    tmp <- res[[id]]
+
+    if (tmp$status == "completed"){
+      lst.imported <-tmp
+
+      itemInfo <- lapply(seq_len(length(lst.imported$item)), function(x){
+        tmp <- as.list(unlist(lst.imported$item[[x]]))
+        return(tmp)
+      })
+      itemInfo <- rbindlist(itemInfo, use.names = T, fill = T)
+      lst.imported = lst.imported[-which(names(lst.imported) %in% "item")]
+
+      index.lists <- unname(which(sapply(lst.imported, is.list) == T))
+
+      # create data.table from all elements which are not a list
+      if (length(index.lists) == 0) {
+        dt <- as.data.table(lst.imported)
+      } else {
+        dt = as.data.table(lst.imported[-index.lists])
+      }
+
+      dt = cbind(dt, itemInfo)
+
+      return(dt)
+    } else {
+      if (debug) {
+        warning(paste0("Task ", task_ids[id], " has no data"))
+      }
+      return(NULL)
+    }
+  })
+  responses <- rbindlist(responses, use.names = T, fill = T)
+
+  return(responses)
+}
 
 
 
@@ -415,52 +473,6 @@ getSettings <- function(env.gems, settings) {
   names(settings) <- settingNames
 
   return(settings)
-}
-
-getResponses <- function(taskIDs, access.token, basicResponseURL, language = "nl", bool.checkSSLcert = T,
-                         debug = 0) {
-
-  require(httr)
-
-  nTaskIDs <- length(taskIDs)
-  responseURL <- paste0(basicResponseURL, "?id=[", paste0(taskIDs, collapse = ","), "]&per_page=", nTaskIDs)
-  res <- getQueryData(url = responseURL, token = access.token, outputType = "parsed", language = language, bool.checkSSLcert = bool.checkSSLcert, debug = debug)
-
-  responses <- lapply(seq_len(nTaskIDs), function(id){
-    tmp <- res[[id]]
-
-    if (tmp$status == "completed"){
-      lst.imported <-tmp
-
-      itemInfo <- lapply(seq_len(length(lst.imported$item)), function(x){
-        tmp <- as.list(unlist(lst.imported$item[[x]]))
-        return(tmp)
-      })
-      itemInfo <- rbindlist(itemInfo, use.names = T, fill = T)
-      lst.imported = lst.imported[-which(names(lst.imported) %in% "item")]
-
-      index.lists <- unname(which(sapply(lst.imported, is.list) == T))
-
-      # create data.table from all elements which are not a list
-      if (length(index.lists) == 0) {
-        dt <- as.data.table(lst.imported)
-      } else {
-        dt = as.data.table(lst.imported[-index.lists])
-      }
-
-      dt = cbind(dt, itemInfo)
-
-      return(dt)
-    } else {
-      if (debug == 1) {
-        warning(paste0("Task ", taskIDs[id], " has no data"))
-      }
-      return(NULL)
-    }
-  })
-  responses <- rbindlist(responses, use.names = T, fill = T)
-
-  return(responses)
 }
 
 getNewToken <- function(access.token, old.token, api_info, bool.checkSSLcert = T) {
