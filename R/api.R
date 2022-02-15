@@ -388,27 +388,29 @@ get_responses <- function(
 }
 
 # Get new token
+# TODO: what is the difference between access_token and old_token?
 get_new_token <- function(
   access_token,
   old_token,
   api_info,
   check_ssl = TRUE
 ) {
-  require(httr)
 
-  newTokenURL <- paste0(api_info$new.tokenurl, old.token)
+  new_token_url <- paste0(api_info$new_token_url, old_token)
 
-  res <- PATCH(newTokenURL,
-               body = list(comment = "oeps, deze was fout"),
-               add_headers(Authorization = paste("Bearer", access.token, sep = " ")),
-               encode = "json",
-               config = httr::config(ssl_verifypeer = bool.checkSSLcert,
-                                     http_version = 2)
+  res <- httr::PATCH(
+    new_token_url,
+    body = list(comment = "Update token"),
+    httr::add_headers(Authorization = paste("Bearer", access_token)),
+    encode = "json",
+    config = httr::config(
+      ssl_verifypeer = check_ssl,
+      http_version = 2
+    )
   )
 
-  if (res$status_code == "201") {
-    return(content(res)$replacement_token)
-  } else {
+  if (res$status_code != "201") {
     return(NULL)
   }
+  return(content(res)$replacement_token)
 }
