@@ -1,16 +1,13 @@
 # API functions
 
-# Get api info
+#' Get api info
+#'
+#' @param environment One of: ["production", "acceptance", "testing"].
+#'
+#' @return List with api information.
+#'
 #' @export
 get_api_info <- function(environment) {
-  # get list with api_info
-  #
-  # Args:
-  #  environment: string with production/acceptance/testing
-  #
-  # Returns:
-  #  list with information for the api
-
   # Assert availability of environment variables
   stopifnot(
     "PULSE_BASE_URL missing" = Sys.getenv("PULSE_BASE_URL") != "",
@@ -48,20 +45,18 @@ get_api_info <- function(environment) {
   return(api_info)
 }
 
-# Get access token
+#' Get access token
+#'
+#' @param api_info List with api information.
+#' @param check_ssl Whether to check the SSL certificate or allow insecure
+#'   connections.
+#' @param debug Whether to enable debugging messages.
+#'
+#' @return Token to access the API.
+#'
 #' @export
 get_access_token <- function(api_info, check_ssl = TRUE, debug = FALSE) {
-  # get access token from API which can be used to substract more information from the API
-  #
-  # Args:
-  #  api_info: list containing information for the api
-  #  check_ssl: boolean if the certificate should be checked with the call
-  #  debug: boolean if the debug messages should be saved
-  #
-  # Returns:
-  #  data.table containing access token
-
-  # Get Access token ------
+  # Get access token
   if (debug) {
     logr::log_print(glue::glue(
       "Access token trying to receive from: {api_info$token_url}"
@@ -94,7 +89,17 @@ get_access_token <- function(api_info, check_ssl = TRUE, debug = FALSE) {
   return(access_token)
 }
 
-# Get query data
+#' Get query data
+#'
+#' @param url The url to make your request to.
+#' @param token API access token.
+#' @param output_type One of ["parsed", "text"].
+#' @param language Language of the response data.
+#' @param check_ssl Whether to check the SSL certificate or allow insecure
+#'   connections.
+#' @param debug Whether to enable debugging messages.
+#'
+#' @return List including the response data.
 get_query_data <- function(
   url,
   token,
@@ -156,7 +161,19 @@ get_query_data <- function(
   return(json_data)
 }
 
-# Get careplan info
+#' Get careplan info
+#'
+#' @param patient_id String formatted like "patient_id@@organisation_id".
+#' @param base_careplan_url API endpoint for careplan data.
+#' @param careplan_filter Vector with careplan names to filter on.
+#' @inheritParams get_query_data
+#'
+#' @return Data.table containing careplan data.
+#'
+#' @examples
+#' get_careplan_info("555555@@70", access_token = token,
+#'   base_careplan_url = url)
+#'
 #' @export
 get_careplan_info <- function(
   patient_id,
@@ -165,7 +182,7 @@ get_careplan_info <- function(
   language = "nl",
   check_ssl = TRUE,
   debug = FALSE,
-  tracks = NULL
+  careplan_filter = NULL
 ) {
 
   careplan_url = paste0(base_careplan_url, patient_id)
@@ -182,15 +199,24 @@ get_careplan_info <- function(
   }
 
   dt_careplan <- data.table::as.data.table(jsonlite::fromJSON(dt_careplan))
-  if (!is.null(tracks)) {
-    dt_careplan = dt_careplan[title %in% tracks]
+  if (!is.null(careplan_filter)) {
+    dt_careplan = dt_careplan[title %in% careplan_filter]
   }
 
   return(dt_careplan)
 
 }
 
-# Get task info
+#' Get task info
+#'
+#' @param patient_id String formatted like "patient_id@@organisation_id".
+#' @param base_task_url API endpoint for task data.
+#' @param tracks Tracks to filter on.
+#' @param careplan_ids Careplan id's to filter on.
+#' @inheritParams get_query_data
+#'
+#' @return Data.table containing task info data.
+#'
 #' @export
 get_task_info <- function(
   patient_id,
@@ -274,7 +300,14 @@ get_task_info <- function(
   return(task_info)
 }
 
-# Get patient info
+#' Get patient info
+#'
+#' @param patient_id String formatted like "patient_id@@organisation_id".
+#' @param base_patient_url API endpoint for patient data.
+#' @inheritParams get_query_data
+#'
+#' @return Data.table containing patient data.
+#'
 #' @export
 get_patient_info <- function(
   patient_id,
@@ -305,8 +338,17 @@ get_patient_info <- function(
   return(patient_info)
 }
 
-# Get organisation (for given patient)
 # TODO: should this return organisations or patient numbers?
+
+#' Get organisation (for given patient)
+#'
+#' @param patient_number Patient number, without the organisation.
+#' @param organisation_id Organisation identifier.
+#' @param base_organisation_url API endpoint for organisation data.
+#' @inheritParams get_query_data
+#'
+#' @return Data.table containing organisation data.
+#'
 #' @export
 get_organisations <- function(
   patient_number,
@@ -331,7 +373,15 @@ get_organisations <- function(
   return(dt_organisations)
 }
 
-# Get responses
+#' Get responses
+#'
+#' @param task_ids Vector of task id's (same as token id's) to retrieve the
+#'   responses from.
+#' @param base_response_url API endpoint for response data.
+#' @inheritParams get_query_data
+#'
+#' @return Data.table containing response data.
+#'
 #' @export
 get_responses <- function(
   task_ids,
@@ -394,8 +444,19 @@ get_responses <- function(
 
 }
 
-# Get new token
 # TODO: what is the difference between access_token and old_token?
+
+#' Get new token
+#'
+#' @param access_token API access token.
+#' @param old_token Expired API access token.
+#' @param api_info List with api information.
+#' @param check_ssl Whether to check the SSL certificate or allow insecure
+#'   connections.
+#' @param debug Whether to enable debugging messages.
+#'
+#' @return New API access token.
+#'
 #' @export
 get_new_token <- function(
   access_token,
