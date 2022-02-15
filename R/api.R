@@ -31,7 +31,7 @@ get_api_info <- function(environment) {
     hashkey = Sys.getenv("PULSE_ENCRYPTION_KEY")
   )
 
-  message("De env variable PULSE_BASE_URL is: {api_info$base_url}")
+  message(glue::glue("De env variable PULSE_BASE_URL is: {api_info$base_url}"))
 
   api_urls <- config::get("gt", file = "inst/extdata/urls.yml")
   dashboard_urls <- list(
@@ -175,7 +175,7 @@ get_query_data <- function(
   #   list with data from the request
 
   #TODO: Use trycatch in case something is wrong
-  if (debug == 1) {
+  if (debug) {
     logr::log_print(
       glue::glue("Try to retrieve data from {url}"), console = FALSE
     )
@@ -194,7 +194,7 @@ get_query_data <- function(
   )
 
   if (req$status_code == 200) {
-    if (debug == 1) {
+    if (debug) {
       logr::log_print(
         glue::glue("data from url {url} correctly obtained"), console = FALSE
       )
@@ -215,7 +215,7 @@ get_query_data <- function(
 }
 
 # Get careplan info
-getCareplanInfo <- function(
+get_careplan_info <- function(
   patient_id,
   access_token,
   base_carepath_url,
@@ -225,24 +225,25 @@ getCareplanInfo <- function(
   tracks = NULL
 ) {
 
-  carepath_url = paste0(base_carepath_url, patient_id) #, "&status=active"
-  dt_careplan <- getQueryData(url = carepathURL, token = access.token, outputType = "text", bool.checkSSLcert = bool.checkSSLcert, debug = debug)
+  carepath_url = paste0(base_carepath_url, patient_id)
+  dt_careplan <- get_query_data(
+    url = carepath_url,
+    token = access_token,
+    output_type = "text",
+    check_ssl = check_ssl,
+    debug = debug
+  )
 
-  if (!is.null(dt.careplan)) {
-    if (dt.careplan != "") {
-      dt.careplan <- fromJSON(dt.careplan)
-      dt.careplan = as.data.table(dt.careplan)
-
-      if (!is.null(tracks)) {
-        dt.careplan = dt.careplan[title %in% tracks]
-      }
-    } else {
-      dt.careplan <- NULL
-    }
-    return(dt.careplan)
-  } else {
+  if (is.null(dt_careplan) | dt_careplan == "") {
     return(NULL)
   }
+
+  dt_careplan <- data.table::as.data.table(jsonlite::fromJSON(dt_careplan))
+  if (!is.null(tracks)) {
+    dt_careplan = dt_careplan[title %in% tracks]
+  }
+
+  return(dt_careplan)
 
 }
 
