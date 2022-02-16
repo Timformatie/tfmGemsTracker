@@ -276,12 +276,6 @@ get_task_info <- function(
         )
       })
 
-      for (col in change_cols) {
-        data.table::set(
-          nested_data, j = col, value = as.character(nested_data[[col]])
-        )
-      }
-
       # Transform to long format
       data_long = data.table::melt(
         nested_data, id.vars = c(".id", "type"), measure.vars = change_cols
@@ -300,7 +294,7 @@ get_task_info <- function(
       )
       dt_element <- data_sub_wide[, `.id` := NULL]
 
-      task_info = task_info[-which(names(task_info) == element)]
+      task_info <- task_info[, .SD, .SDcols = !names(task_info) == element]
       task_info = cbind(task_info, dt_element)
     }
   }
