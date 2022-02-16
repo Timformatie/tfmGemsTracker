@@ -266,10 +266,22 @@ get_task_info <- function(
       change_cols <- colnames(nested_data)[
         !colnames(nested_data) %in% c("type", ".id")
       ]
-      nested_data = nested_data[
-        , (change_cols) := lapply(.SD, na.rm = TRUE, as.character),
-        .SDcols = change_cols
-      ]
+      # nested_data = nested_data[
+      #   , (change_cols) := lapply(.SD, na.rm = TRUE, as.character),
+      #   .SDcols = change_cols
+      # ]
+      sapply(change_cols, function(col) {
+        data.table::set(
+          nested_data, j = col, value = as.character(nested_data[[col]])
+        )
+      })
+
+      for (col in change_cols) {
+        data.table::set(
+          nested_data, j = col, value = as.character(nested_data[[col]])
+        )
+      }
+
       # Transform to long format
       data_long = data.table::melt(
         nested_data, id.vars = c(".id", "type"), measure.vars = change_cols
