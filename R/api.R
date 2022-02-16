@@ -247,7 +247,9 @@ get_task_info <- function(
     return(NULL)
   }
 
-  task_info <- jsonlite::fromJSON(task_info, flatten = TRUE)
+  task_info <- data.table::as.data.table(jsonlite::fromJSON(
+    task_info, flatten = TRUE
+  ))
 
   # Unlist nested elements
   nested_elements <-  names(task_info)[sapply(task_info, class) == "list"]
@@ -367,8 +369,9 @@ get_organisations <- function(
     debug = debug
   )
 
-  dt_organisations <- jsonlite::fromJSON(dt_organisations)
-  dt_organisations = data.table::as.data.table(dt_organisations)
+  dt_organisations <- data.table::as.data.table(jsonlite::fromJSON(
+    dt_organisations
+  ))
   return(dt_organisations)
 }
 
