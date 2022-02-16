@@ -31,7 +31,6 @@ get_api_info <- function(environment) {
 
   message(glue::glue("De env variable PULSE_BASE_URL is: {api_info$base_url}"))
 
-  api_urls <- config::get("gt", file = "inst/extdata/urls.yml")
   dashboard_urls <- list(
     base = Sys.getenv("APP_BASE_URL")
   )
