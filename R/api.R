@@ -184,6 +184,7 @@ get_careplan_info <- function(
   debug = FALSE,
   careplan_filter = NULL
 ) {
+  title <- NULL # Avoid NSE errors
 
   careplan_url = paste0(base_careplan_url, patient_id)
   dt_careplan <- get_query_data(
@@ -231,6 +232,8 @@ get_task_info <- function(
   tracks = NULL,
   careplan_ids = NULL
 ) {
+  `.` <- `.id` <- col_name <- count <- track <- type <- value <- variable <-
+    NULL # Avoid NSE errors
 
   if (!is.null(careplan_ids)) {
     task_url = glue::glue(
