@@ -5,7 +5,7 @@ Version: 0.1.0
 Author: Timformatie
 Maintainer: The package maintainer <tim.eeftink@timformatie.nl>
 Description: Utility functions for retrieving and working with GemsTracker data.
-License: 
+License: GPL-3 + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Imports:

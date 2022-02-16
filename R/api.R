@@ -7,6 +7,7 @@
 #' @return List with api information.
 #'
 #' @export
+#' @importFrom glue glue
 get_api_info <- function(environment) {
   # Assert availability of environment variables
   stopifnot(
@@ -54,6 +55,9 @@ get_api_info <- function(environment) {
 #' @return Token to access the API.
 #'
 #' @export
+#' @importFrom httr authenticate config content POST
+#' @importFrom glue glue
+#' @importFrom logr log_print
 get_access_token <- function(api_info, check_ssl = TRUE, debug = FALSE) {
   # Get access token
   if (debug) {
@@ -99,6 +103,10 @@ get_access_token <- function(api_info, check_ssl = TRUE, debug = FALSE) {
 #' @param debug Whether to enable debugging messages.
 #'
 #' @return List including the response data.
+#'
+#' @importFrom glue glue
+#' @importFrom httr add_headers config content GET
+#' @importFrom logr log_print
 get_query_data <- function(
   url,
   token,
@@ -107,16 +115,7 @@ get_query_data <- function(
   check_ssl = TRUE,
   debug = FALSE
 ) {
-  # Gives back data from the api. based on a request
-  #
-  # Args:
-  #   url: a string with the url to get the data from
-  #   token: access token which is used for authentication
-  #
-  # Returns:
-  #   list with data from the request
 
-  #TODO: Use trycatch in case something is wrong
   if (debug) {
     logr::log_print(
       glue::glue("Try to retrieve data from {url}"), console = FALSE
@@ -174,6 +173,8 @@ get_query_data <- function(
 #'   base_careplan_url = url)
 #'
 #' @export
+#' @import data.table
+#' @importFrom jsonlite fromJSON
 get_careplan_info <- function(
   patient_id,
   access_token,
@@ -217,6 +218,9 @@ get_careplan_info <- function(
 #' @return Data.table containing task info data.
 #'
 #' @export
+#' @import data.table
+#' @importFrom glue glue
+#' @importFrom jsonlite fromJSON
 get_task_info <- function(
   patient_id,
   access_token,
@@ -316,6 +320,8 @@ get_task_info <- function(
 #' @return Data.table containing patient data.
 #'
 #' @export
+#' @import data.table
+#' @importFrom jsonlite fromJSON
 get_patient_info <- function(
   patient_id,
   access_token,
@@ -357,6 +363,9 @@ get_patient_info <- function(
 #' @return Data.table containing organisation data.
 #'
 #' @export
+#' @import data.table
+#' @importFrom glue glue
+#' @importFrom jsonlite fromJSON
 get_organisations <- function(
   patient_number,
   organisation_id,
@@ -391,6 +400,8 @@ get_organisations <- function(
 #' @return Data.table containing response data.
 #'
 #' @export
+#' @import data.table
+#' @importFrom glue glue
 get_responses <- function(
   task_ids,
   access_token,
@@ -466,6 +477,7 @@ get_responses <- function(
 #' @return New API access token.
 #'
 #' @export
+#' @importFrom httr add_headers config content PATCH
 get_new_token <- function(
   access_token,
   old_token,
@@ -489,5 +501,5 @@ get_new_token <- function(
   if (res$status_code != "201") {
     return(NULL)
   }
-  return(content(res)$replacement_token)
+  return(httr::content(res)$replacement_token)
 }
