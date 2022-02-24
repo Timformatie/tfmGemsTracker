@@ -27,7 +27,7 @@ get_api_info <- function(environment) {
     client_secret = Sys.getenv("PULSE_API_CLIENT_SECRET"),
     username = Sys.getenv("PULSE_USERNAME"),
     password = Sys.getenv("PULSE_PASSWORD"),
-    hashkey = Sys.getenv("PULSE_ENCRYPTION_KEY")
+    hash_key = Sys.getenv("PULSE_ENCRYPTION_KEY")
   )
 
   message(glue::glue("De env variable PULSE_BASE_URL is: {api_info$base_url}"))
@@ -90,6 +90,79 @@ get_access_token <- function(api_info, check_ssl = TRUE, debug = FALSE) {
   access_token <- httr::content(response)$access_token
 
   return(access_token)
+}
+
+#' Decode url key
+#'
+#' @description Decode the key in the url to get a password for the access
+#'   token.
+#'
+#' @param hash_key Key that is given to decrypt
+#' @param url_key Encrypted key retrieved from the url
+#'
+#' @return String containing the encrypted password which can be used to get an
+#'   access token
+#'
+#' @export
+#' @importFrom glue glue
+#' @importFrom jsonlite fromJSON
+#' @importFrom logr log_print
+#' @importFrom openssl aes_cbc_decrypt base64_decode
+decode_url_key <- function(hash_key, url_key, debug = FALSE) {
+
+  key_decoded <- rawToChar(openssl::base64_decode(URLdecode(url_key)))
+  if (debug) {
+    logr::log_print(
+      glue::glue("Decoded key is: {key_decoded}"), console = FALSE
+    )
+  }
+
+  # Extract last n characters
+  n_last <- 1
+  last_char <- substr(
+    key_decoded,
+    nchar(key_decoded) - n_last + 1,
+    nchar(key_decoded)
+  )
+
+  if (last_char != "}") {
+    if (last_char != '"') {
+      key_decoded = paste0(key_decoded, '"}')
+    } else {
+      key_decoded = paste0(key_decoded, "}")
+    }
+  }
+  key_decoded = paste0(key_decoded, collapse = "")
+
+  if (debug) {
+    logr::log_print(
+      glue::glue("Decoded key is: {key_decoded}"), console = FALSE
+    )
+  }
+
+  # Extract and decode elements from key
+  key_elements <- jsonlite::fromJSON(key_decoded)
+
+  initialization_vector <- openssl::base64_decode(key_elements[["iv"]])
+  data <- openssl::base64_decode(key_elements[["data"]])
+  key <- openssl::base64_decode(hash_key)
+
+  # Create password using the encryption key
+  password_raw <- openssl::aes_cbc_decrypt(
+    data, key = key, iv = initialization_vector
+  )
+  password <- rawToChar(password_raw)
+
+  if (is.null(key_elements$group)) {
+    key_elements[["group"]] <- ""
+  }
+
+  return(list(
+    password = paste0("key:", password),
+    username = key_elements[["user"]],
+    group = key_elements[["group"]]
+  ))
+
 }
 
 #' Get query data
