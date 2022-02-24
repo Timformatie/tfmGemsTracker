@@ -45,53 +45,6 @@ get_api_info <- function(environment) {
   return(api_info)
 }
 
-#' Get access token
-#'
-#' @param api_info List with api information.
-#' @param check_ssl Whether to check the SSL certificate or allow insecure
-#'   connections.
-#' @param debug Whether to enable debugging messages.
-#'
-#' @return Token to access the API.
-#'
-#' @export
-#' @importFrom httr authenticate config content POST
-#' @importFrom glue glue
-#' @importFrom logr log_print
-get_access_token <- function(api_info, check_ssl = TRUE, debug = FALSE) {
-  # Get access token
-  if (debug) {
-    logr::log_print(glue::glue(
-      "Access token trying to receive from: {api_info$token_url}"
-    ), console = FALSE)
-    logr::log_print(glue::glue(
-      "Access token with user: {api_info$username}"
-    ), console = FALSE)
-  }
-
-  response <- httr::POST(
-    api_info$token_url,
-    body = list(grant_type = "password",
-                username = api_info$username,
-                password = api_info$password),
-    httr::authenticate(api_info$client_id,
-                 api_info$client_secret),
-    config = httr::config(ssl_verifypeer = check_ssl,
-                          http_version = 2)
-  )
-
-  # check if output is correct
-  if (response$status_code != 200) {
-    stop(glue::glue("Status code for access token is: {response$status_code}. ",
-                    "Something goes wrong with login details"))
-  } else {
-    message("Access token correctly obtained.")
-  }
-  access_token <- httr::content(response)$access_token
-
-  return(access_token)
-}
-
 #' Decode url key
 #'
 #' @description Decode the key in the url to get a password for the access
@@ -108,6 +61,7 @@ get_access_token <- function(api_info, check_ssl = TRUE, debug = FALSE) {
 #' @importFrom jsonlite fromJSON
 #' @importFrom logr log_print
 #' @importFrom openssl aes_cbc_decrypt base64_decode
+#' @importFrom utils URLdecode
 decode_url_key <- function(hash_key, url_key, debug = FALSE) {
 
   key_decoded <- rawToChar(openssl::base64_decode(URLdecode(url_key)))
@@ -163,6 +117,53 @@ decode_url_key <- function(hash_key, url_key, debug = FALSE) {
     group = key_elements[["group"]]
   ))
 
+}
+
+#' Get access token
+#'
+#' @param api_info List with api information.
+#' @param check_ssl Whether to check the SSL certificate or allow insecure
+#'   connections.
+#' @param debug Whether to enable debugging messages.
+#'
+#' @return Token to access the API.
+#'
+#' @export
+#' @importFrom httr authenticate config content POST
+#' @importFrom glue glue
+#' @importFrom logr log_print
+get_access_token <- function(api_info, check_ssl = TRUE, debug = FALSE) {
+  # Get access token
+  if (debug) {
+    logr::log_print(glue::glue(
+      "Access token trying to receive from: {api_info$token_url}"
+    ), console = FALSE)
+    logr::log_print(glue::glue(
+      "Access token with user: {api_info$username}"
+    ), console = FALSE)
+  }
+
+  response <- httr::POST(
+    api_info$token_url,
+    body = list(grant_type = "password",
+                username = api_info$username,
+                password = api_info$password),
+    httr::authenticate(api_info$client_id,
+                 api_info$client_secret),
+    config = httr::config(ssl_verifypeer = check_ssl,
+                          http_version = 2)
+  )
+
+  # check if output is correct
+  if (response$status_code != 200) {
+    stop(glue::glue("Status code for access token is: {response$status_code}. ",
+                    "Something goes wrong with login details"))
+  } else {
+    message("Access token correctly obtained.")
+  }
+  access_token <- httr::content(response)$access_token
+
+  return(access_token)
 }
 
 #' Get query data
