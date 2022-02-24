@@ -1,11 +1,21 @@
 Package: tfmGemsTracker
 Type: Package
-Title: What the Package Does (Title Case)
+Title: GemsTracker functions
 Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+Author: Timformatie
+Maintainer: The package maintainer <tim.eeftink@timformatie.nl>
+Description: Utility functions for retrieving and working with GemsTracker data.
 Encoding: UTF-8
 LazyData: true
+Imports:
+  config (>= 0.3.1),
+  data.table (>= 1.14.2),
+  glue (>= 1.6.0),
+  httr (>= 1.4.2),
+  jsonlite (>= 1.7.2),
+  logr (>= 1.2.7),
+  openssl (>= 1.4.6)
+Depends: 
+    R (>= 2.10)
+RoxygenNote: 7.1.2
+License: GPL (>= 3)

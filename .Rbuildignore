@@ -2,3 +2,7 @@
 ^renv\.lock$
 ^.*\.Rproj$
 ^\.Rproj\.user$
+^data-raw$
+^development
+^unused
+^LICENSE\.md$
