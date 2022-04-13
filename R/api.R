@@ -15,10 +15,7 @@ get_api_info <- function(environment) {
     "PULSE_API_CLIENT_ID missing" = Sys.getenv("PULSE_API_CLIENT_ID") != "",
     "PULSE_API_CLIENT_SECRET missing" =
       Sys.getenv("PULSE_API_CLIENT_SECRET") != "",
-    "PULSE_USERNAME missing" = Sys.getenv("PULSE_USERNAME") != "",
-    "PULSE_PASSWORD missing" = Sys.getenv("PULSE_PASSWORD") != "",
-    "PULSE_ENCRYPTION_KEY missing" = Sys.getenv("PULSE_ENCRYPTION_KEY") != "",
-    "APP_BASE_URL missing" = Sys.getenv("APP_BASE_URL") != ""
+    "PULSE_ENCRYPTION_KEY missing" = Sys.getenv("PULSE_ENCRYPTION_KEY") != ""
   )
 
   api_info <- list(
