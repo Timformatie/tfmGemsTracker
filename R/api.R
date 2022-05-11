@@ -577,3 +577,59 @@ get_new_token <- function(
   }
   return(httr::content(res)$replacement_token)
 }
+
+#' Post activity log
+#'
+post_activity_log <- function(
+  activity_log_url,
+  body,
+  access_token,
+  language = "nl",
+  check_ssl = TRUE,
+  debug = FALSE
+) {
+
+  if (debug) {
+    logr::log_print(
+      glue::glue("Posting data to {activity_log_url}"), console = FALSE
+    )
+  }
+  res <- httr::POST(
+    activity_log_url,
+    httr::add_headers(
+      Authorization = glue::glue("Bearer {access_token}"),
+      `Accept-Language` = language
+    ),
+    body = body,
+    config = httr::config(
+      ssl_verifypeer = check_ssl,
+      http_version = 2
+    ),
+    encode = "json"
+  )
+
+  # TODO: status code can be 201
+  if (req$status_code != 200) {
+    stop(glue::glue(
+      "Request failed with status code {res$status_code}."
+    ))
+    if (debug) {
+      logr::log_print(glue::glue(
+        "Post to url {activity_log_url} was NOT succesful"
+      ), console = FALSE)
+      logr::log_print(glue::glue(
+        "Error in post: {activity_log_url} with status code: {res$status_code}"
+      ), console = FALSE)
+    }
+    return(NULL)
+  }
+
+  if (debug) {
+    logr::log_print(
+      glue::glue(
+        "posted data correctly to url {activity_log_url}"
+      ), console = FALSE
+    )
+  }
+
+}
