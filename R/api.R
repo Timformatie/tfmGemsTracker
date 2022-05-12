@@ -580,6 +580,18 @@ get_new_token <- function(
 
 #' Post activity log
 #'
+#' @param activity_log_url API endpoint for the activity log.
+#' @param body Content to post as a list.
+#' @param access_token API access token.
+#' @param language Language of the response data.
+#' @param check_ssl Whether to check the SSL certificate or allow insecure
+#'   connections.
+#' @param debug Whether to enable debugging messages.
+#'
+#' @export
+#' @importFrom glue glue
+#' @importFrom httr add_headers config content POST
+#' @importFrom logr log_print
 post_activity_log <- function(
   activity_log_url,
   body,
@@ -596,20 +608,20 @@ post_activity_log <- function(
   }
   res <- httr::POST(
     activity_log_url,
+    body = body,
     httr::add_headers(
       Authorization = glue::glue("Bearer {access_token}"),
       `Accept-Language` = language
     ),
-    body = body,
+    encode = "json",
     config = httr::config(
       ssl_verifypeer = check_ssl,
       http_version = 2
-    ),
-    encode = "json"
+    )
   )
 
   # TODO: status code can be 201
-  if (req$status_code != 200) {
+  if (res$status_code != 200) {
     stop(glue::glue(
       "Request failed with status code {res$status_code}."
     ))
