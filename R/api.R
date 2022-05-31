@@ -49,6 +49,7 @@ get_api_info <- function(environment) {
 #'
 #' @param hash_key Key that is given to decrypt
 #' @param url_key Encrypted key retrieved from the url
+#' @param debug Whether to enable debugging messages.
 #'
 #' @return String containing the encrypted password which can be used to get an
 #'   access token
@@ -233,6 +234,7 @@ get_query_data <- function(
 #' Get careplan info
 #'
 #' @param patient_id String formatted like "patient_id@@organisation_id".
+#' @param access_token API access token.
 #' @param base_careplan_url API endpoint for careplan data.
 #' @param careplan_filter Vector with careplan names to filter on.
 #' @inheritParams get_query_data
@@ -240,8 +242,8 @@ get_query_data <- function(
 #' @return Data.table containing careplan data.
 #'
 #' @examples
-#' get_careplan_info("555555@@70", access_token = token,
-#'   base_careplan_url = url)
+#' get_careplan_info("555555@@70", access_token = "<token>",
+#'   base_careplan_url = "<url>")
 #'
 #' @export
 #' @import data.table
@@ -282,6 +284,7 @@ get_careplan_info <- function(
 #' Get task info
 #'
 #' @param patient_id String formatted like "patient_id@@organisation_id".
+#' @param access_token API access token.
 #' @param base_task_url API endpoint for task data.
 #' @param tracks Tracks to filter on.
 #' @param careplan_ids Careplan id's to filter on.
@@ -388,6 +391,7 @@ get_task_info <- function(
 #' Get patient info
 #'
 #' @param patient_id String formatted like "patient_id@@organisation_id".
+#' @param access_token API access token.
 #' @param base_patient_url API endpoint for patient data.
 #' @inheritParams get_query_data
 #'
@@ -431,6 +435,7 @@ get_patient_info <- function(
 #'
 #' @param patient_number Patient number, without the organisation.
 #' @param organisation_id Organisation identifier.
+#' @param access_token API access token.
 #' @param base_organisation_url API endpoint for organisation data.
 #' @inheritParams get_query_data
 #'
@@ -468,8 +473,10 @@ get_organisations <- function(
 #'
 #' @param task_ids Vector of task id's (same as token id's) to retrieve the
 #'   responses from.
+#' @param access_token API access token.
 #' @param base_response_url API endpoint for response data.
 #' @inheritParams get_query_data
+#' @param debug Whether to enable debugging messages.
 #'
 #' @return Data.table containing response data.
 #'
@@ -546,7 +553,6 @@ get_responses <- function(
 #' @param api_info List with api information.
 #' @param check_ssl Whether to check the SSL certificate or allow insecure
 #'   connections.
-#' @param debug Whether to enable debugging messages.
 #'
 #' @return New API access token.
 #'

@@ -16,6 +16,8 @@ get_patient_info(
 \arguments{
 \item{patient_id}{String formatted like "patient_id@organisation_id".}
 
+\item{access_token}{API access token.}
+
 \item{base_patient_url}{API endpoint for patient data.}
 
 \item{language}{Language of the response data.}

@@ -18,6 +18,8 @@ get_task_info(
 \arguments{
 \item{patient_id}{String formatted like "patient_id@organisation_id".}
 
+\item{access_token}{API access token.}
+
 \item{base_task_url}{API endpoint for task data.}
 
 \item{language}{Language of the response data.}

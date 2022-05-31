@@ -17,6 +17,8 @@ get_responses(
 \item{task_ids}{Vector of task id's (same as token id's) to retrieve the
 responses from.}
 
+\item{access_token}{API access token.}
+
 \item{base_response_url}{API endpoint for response data.}
 
 \item{language}{Language of the response data.}

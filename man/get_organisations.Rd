@@ -18,6 +18,8 @@ get_organisations(
 
 \item{organisation_id}{Organisation identifier.}
 
+\item{access_token}{API access token.}
+
 \item{base_organisation_url}{API endpoint for organisation data.}
 
 \item{check_ssl}{Whether to check the SSL certificate or allow insecure
