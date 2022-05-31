@@ -6,3 +6,4 @@
 ^development
 ^unused
 ^LICENSE\.md$
+^.Renviron.*$
