@@ -14,5 +14,6 @@ default:
         insert_questionnaire: "api/insert-track-token"
         return_respondent: "respondent/show/"
         other_organisation: "api/other-patient-numbers/"
+        activity_log: "api/activity-log"
     dashboard:
         base: "https://analyse.equipezorgbedrijven.nl/shiny/artsendashboard/"

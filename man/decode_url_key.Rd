@@ -10,6 +10,8 @@ decode_url_key(hash_key, url_key, debug = FALSE)
 \item{hash_key}{Key that is given to decrypt}
 
 \item{url_key}{Encrypted key retrieved from the url}
+
+\item{debug}{Whether to enable debugging messages.}
 }
 \value{
 String containing the encrypted password which can be used to get an

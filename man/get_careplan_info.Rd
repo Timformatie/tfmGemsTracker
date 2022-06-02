@@ -17,6 +17,8 @@ get_careplan_info(
 \arguments{
 \item{patient_id}{String formatted like "patient_id@organisation_id".}
 
+\item{access_token}{API access token.}
+
 \item{base_careplan_url}{API endpoint for careplan data.}
 
 \item{language}{Language of the response data.}
@@ -35,7 +37,7 @@ Data.table containing careplan data.
 Get careplan info
 }
 \examples{
-get_careplan_info("555555@70", access_token = token,
-  base_careplan_url = url)
+get_careplan_info("555555@70", access_token = "<token>",
+  base_careplan_url = "<url>")
 
 }

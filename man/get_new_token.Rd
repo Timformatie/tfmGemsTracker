@@ -15,8 +15,6 @@ get_new_token(access_token, old_token, api_info, check_ssl = TRUE)
 
 \item{check_ssl}{Whether to check the SSL certificate or allow insecure
 connections.}
-
-\item{debug}{Whether to enable debugging messages.}
 }
 \value{
 New API access token.
