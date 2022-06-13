@@ -659,11 +659,11 @@ post_activity_log <- function(
 #' @param respondent_track_id Respondent track identifier.
 #' @param organisation_id Organisation identifier.
 #' @param access_token API access token.
-#' @param base_model_mapper_url API endpoint for organisation data.
-#' @param dataset Dataset to retrieve data from.
+#' @param base_model_mapper_url API endpoint for model mapper data.
+#' @param dataset Data set to retrieve data from.
 #' @inheritParams get_query_data
 #'
-#' @return Data.table containing organisation data.
+#' @return Data.table containing model mapper data.
 #'
 #' @export
 #' @import data.table
