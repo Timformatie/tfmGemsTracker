@@ -15,5 +15,6 @@ default:
         return_respondent: "respondent/show/"
         other_organisation: "api/other-patient-numbers/"
         activity_log: "api/activity-log"
+        model_mapper_url: "api/data-set/data/"
     dashboard:
         base: "https://analyse.equipezorgbedrijven.nl/shiny/artsendashboard/"

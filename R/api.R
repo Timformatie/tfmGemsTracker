@@ -176,6 +176,7 @@ get_access_token <- function(api_info, check_ssl = TRUE, debug = FALSE) {
 #'
 #' @return List including the response data.
 #'
+#' @export
 #' @importFrom glue glue
 #' @importFrom httr add_headers config content GET
 #' @importFrom logr log_print
@@ -650,4 +651,49 @@ post_activity_log <- function(
     )
   }
 
+}
+
+#' Get model mapper
+#'
+#' @param patient_number Patient number, without the organisation.
+#' @param respondent_track_id Respondent track identifier.
+#' @param organisation_id Organisation identifier.
+#' @param access_token API access token.
+#' @param base_model_mapper_url API endpoint for model mapper data.
+#' @param dataset Data set to retrieve data from.
+#' @inheritParams get_query_data
+#'
+#' @return Data.table containing model mapper data.
+#'
+#' @export
+#' @import data.table
+#' @importFrom glue glue
+#' @importFrom jsonlite fromJSON
+get_model_mapper <- function(
+    patient_number,
+    respondent_track_id,
+    organisation_id,
+    access_token,
+    base_model_mapper_url,
+    dataset = "arat",
+    check_ssl = TRUE,
+    debug = FALSE
+) {
+
+  model_mapper_url <- glue::glue(
+    "{base_model_mapper_url}{dataset}?patientNr={patient_number}&",
+    "organizationId={organisation_id}&respondentTrack={respondent_track_id}"
+  )
+  dt_model_mapper <- get_query_data(
+    url = model_mapper_url,
+    token = access_token,
+    output_type = "text",
+    check_ssl = check_ssl,
+    debug = debug
+  )
+
+  dt_model_mapper <- data.table::as.data.table(jsonlite::fromJSON(
+    dt_model_mapper
+  ))
+  return(dt_model_mapper)
 }
