@@ -24,9 +24,9 @@ get_model_mapper(
 
 \item{access_token}{API access token.}
 
-\item{base_model_mapper_url}{API endpoint for organisation data.}
+\item{base_model_mapper_url}{API endpoint for model mapper data.}
 
-\item{dataset}{Dataset to retrieve data from.}
+\item{dataset}{Data set to retrieve data from.}
 
 \item{check_ssl}{Whether to check the SSL certificate or allow insecure
 connections.}
@@ -34,7 +34,7 @@ connections.}
 \item{debug}{Whether to enable debugging messages.}
 }
 \value{
-Data.table containing organisation data.
+Data.table containing model mapper data.
 }
 \description{
 Get model mapper
