@@ -207,7 +207,7 @@ get_query_data <- function(
     )
   )
 
-  if (req$status_code != 200) {
+  if (req$status_code != c(200, 204)) {
     stop(glue::glue(
       "Request failed with status code {req$status_code}. "
       #"{httr::content(req)$error}"
@@ -223,12 +223,21 @@ get_query_data <- function(
     return(NULL)
   }
 
-  if (debug) {
-    logr::log_print(
-      glue::glue("data from url {url} correctly obtained"), console = FALSE
-    )
+  if (req$status_code == 200) {
+    if (debug) {
+      logr::log_print(
+        glue::glue("data from url {url} correctly obtained"), console = FALSE
+      )
+    }
+    json_data <- httr::content(req, as = output_type, encoding = "UTF-8")
+  } else if (req$status_code == 204) {
+    if (debug) {
+      logr::log_print(
+        glue::glue("data from url {url} correctly obtained but no content"), console = FALSE
+      )
+    }
+    json_data <- NULL
   }
-  json_data <- httr::content(req, as = output_type, encoding = "UTF-8")
   return(json_data)
 }
 
