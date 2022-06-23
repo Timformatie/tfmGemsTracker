@@ -207,7 +207,7 @@ get_query_data <- function(
     )
   )
 
-  if (req$status_code != c(200, 204)) {
+  if (! req$status_code %in% c(200, 204)) {
     stop(glue::glue(
       "Request failed with status code {req$status_code}. "
       #"{httr::content(req)$error}"
