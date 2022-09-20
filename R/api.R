@@ -636,8 +636,7 @@ post_activity_log <- function(
     )
   )
 
-  # TODO: status code can be 201
-  if (res$status_code != 200) {
+  if (!res$status_code %in% c(200, 201)) {
     stop(glue::glue(
       "Request failed with status code {res$status_code}."
     ))
