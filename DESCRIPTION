@@ -1,7 +1,7 @@
 Package: tfmGemsTracker
 Type: Package
 Title: GemsTracker functions
-Version: 0.2.2
+Version: 0.2.3
 Author: Timformatie
 Maintainer: The package maintainer <tim.eeftink@timformatie.nl>
 Description: Utility functions for retrieving and working with GemsTracker data.
