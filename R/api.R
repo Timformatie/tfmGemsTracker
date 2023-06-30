@@ -705,3 +705,66 @@ get_model_mapper <- function(
   ))
   return(dt_model_mapper)
 }
+
+#' Add questionnaire
+#'
+#' @description Creates a survey task for a respondent in a specific track.
+#'
+#' @param access_token API access token.
+#' @param api_info List with api information.
+#' @param respondent_track_id Respondent track identifier.
+#' @param survey_id Survey identifier.
+#' @param round_description Pulse description of the round within a track.
+#' @param valid_from Date from which the survey should be valid.
+#' @param valid_untill Date untill which the survey should be valid.
+#' @param round_order Integer value to indicate the order of the round.
+#' @param check_ssl Whether to check the SSL certificate or allow insecure
+#'   connections.
+#'
+#' @importFrom glue glue
+#' @importFrom httr add_headers config POST
+add_questionnaire <- function(
+    access_token,
+    api_info,
+    respondent_track_id,
+    survey_id,
+    round_description,
+    valid_from,
+    valid_untill,
+    round_order = NULL,
+    check_ssl = TRUE
+) {
+
+  json_data <- list(
+    respondentTrackId = respondent_track_id,
+    surveyId = survey_id,
+    roundDescription = round_description,
+    validFrom = valid_from,
+    valid_untill = valid_untill,
+    roundOrder = round_order
+  )
+
+  res <- httr::POST(
+    api_info$insert_questionnaire,
+    body = json_data,
+    httr::add_headers(
+      Authorization = glue::glue("Bearer {access_token}"),
+      `Accept-Language` = language
+    ),
+    encode = "json",
+    config = httr::config(
+      ssl_verifypeer = check_ssl,
+      http_version = 2
+    )
+  )
+
+  if (res$status_code == "201") {
+    message("Questionnaire correctly added")
+  } else {
+    stop(glue::glue(
+      "Request failed with status code {res$status_code}."
+    ))
+  }
+
+}
+
