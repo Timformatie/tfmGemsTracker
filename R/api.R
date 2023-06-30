@@ -252,8 +252,10 @@ get_query_data <- function(
 #' @return Data.table containing careplan data.
 #'
 #' @examples
+#' \dontrun {
 #' get_careplan_info("555555@@70", access_token = "<token>",
 #'   base_careplan_url = "<url>")
+#' }
 #'
 #' @export
 #' @import data.table
@@ -832,6 +834,7 @@ change_execution_period <- function(
 #'
 #' @importFrom glue glue
 #' @importFrom openssl base64_encode
+#' @importFrom utils URLencode
 get_return_url <- function(
     api_info,
     patient_id,
