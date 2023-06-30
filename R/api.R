@@ -252,7 +252,7 @@ get_query_data <- function(
 #' @return Data.table containing careplan data.
 #'
 #' @examples
-#' \dontrun {
+#' \dontrun{
 #' get_careplan_info("555555@@70", access_token = "<token>",
 #'   base_careplan_url = "<url>")
 #' }
