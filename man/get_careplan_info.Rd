@@ -37,7 +37,9 @@ Data.table containing careplan data.
 Get careplan info
 }
 \examples{
+\dontrun{
 get_careplan_info("555555@70", access_token = "<token>",
   base_careplan_url = "<url>")
+}
 
 }

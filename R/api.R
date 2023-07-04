@@ -252,8 +252,10 @@ get_query_data <- function(
 #' @return Data.table containing careplan data.
 #'
 #' @examples
+#' \dontrun{
 #' get_careplan_info("555555@@70", access_token = "<token>",
 #'   base_careplan_url = "<url>")
+#' }
 #'
 #' @export
 #' @import data.table
@@ -704,4 +706,148 @@ get_model_mapper <- function(
     dt_model_mapper
   ))
   return(dt_model_mapper)
+}
+
+#' Add questionnaire
+#'
+#' @description Creates a survey task for a respondent in a specific track.
+#'
+#' @param access_token API access token.
+#' @param api_info List with api information.
+#' @param respondent_track_id Respondent track identifier.
+#' @param survey_id Survey identifier.
+#' @param round_description Gems description of the round within a track.
+#' @param valid_from Date from which the survey token should be valid.
+#' @param valid_untill Date until which the survey token should be valid.
+#' @param round_order Integer value to indicate the order of the round.
+#' @param check_ssl Whether to check the SSL certificate or allow insecure
+#'   connections.
+#'
+#' @importFrom glue glue
+#' @importFrom httr add_headers config POST
+add_questionnaire <- function(
+    access_token,
+    api_info,
+    respondent_track_id,
+    survey_id,
+    round_description,
+    valid_from,
+    valid_untill,
+    round_order = NULL,
+    check_ssl = TRUE
+) {
+
+  json_data <- list(
+    respondentTrackId = respondent_track_id,
+    surveyId = survey_id,
+    roundDescription = round_description,
+    validFrom = valid_from,
+    valid_untill = valid_untill,
+    roundOrder = round_order
+  )
+
+  res <- httr::POST(
+    api_info$insert_questionnaire,
+    body = json_data,
+    httr::add_headers(
+      Authorization = glue::glue("Bearer {access_token}")
+    ),
+    encode = "json",
+    config = httr::config(
+      ssl_verifypeer = check_ssl,
+      http_version = 2
+    )
+  )
+
+  if (res$status_code == "201") {
+    message("Questionnaire correctly added")
+  } else {
+    stop(glue::glue(
+      "Request failed with status code {res$status_code}."
+    ))
+  }
+
+}
+
+#' Change execution period
+#'
+#' @description Change the validity of a Gems token.
+#'
+#' @param access_token API access token.
+#' @param token_id Identifier of the token to change.
+#' @param api_info List with api information.
+#' @param valid_from New date from which the survey token should be valid.
+#' @param valid_untill New date until which the survey token should be valid.
+#' @param check_ssl Whether to check the SSL certificate or allow insecure
+#'   connections.
+#'
+#' @importFrom glue glue
+#' @importFrom httr add_headers config PATCH
+change_execution_period <- function(
+    access_token,
+    token_id,
+    api_info,
+    valid_from,
+    valid_untill,
+    check_ssl = TRUE
+) {
+
+  json_data <- list(
+    executionPeriod = list(
+      start = valid_from,
+      end = valid_untill
+    )
+  )
+
+  res <- httr::PATCH(
+    glue::glue("{api_info$task_url_clean}{token_id}"),
+    body = json_data,
+    httr::add_headers(
+      Authorization = glue::glue("Bearer {access_token}")
+    ),
+    encode = "json",
+    config = httr::config(
+      ssl_verifypeer = check_ssl,
+      http_version = 2
+    )
+  )
+
+  if (res$status_code == "201") {
+    message("Patch is correct")
+  } else {
+    stop(glue::glue(
+      "Request failed with status code {res$status_code}."
+    ))
+  }
+}
+
+#' Get return url
+#'
+#' @description Create a redirect link to return from Gems to the dashboard.
+#'
+#' @param api_info List with api information.
+#' @param patient_id Patient identifier.
+#' @param organisation_id Organisation identifier.
+#' @param environment One of: ["production", "acceptance", "testing"].
+#'
+#' @return String containing the encoded return url.
+#'
+#' @importFrom glue glue
+#' @importFrom openssl base64_encode
+#' @importFrom utils URLencode
+get_return_url <- function(
+    api_info,
+    patient_id,
+    organisation_id,
+    environment
+){
+
+  url_output <- glue::glue(
+    "{api_info$base_url}respondent/r-dashboard/id1/{patient_id}/id2/",
+    "{organisation_id}/redirect/1"
+  )
+
+  url_encoded <- URLencode(openssl::base64_encode(url_output), reserved = TRUE)
+
+  return(url_encoded)
 }
