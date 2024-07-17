@@ -5,6 +5,7 @@
 #'
 #' @param hash_key Key that is given to decrypt
 #' @param url_key Encrypted key retrieved from the url
+#' @param gunzip Whether to gunzip the key after decoding.
 #' @param debug Whether to enable debugging messages.
 #'
 #' @return String containing the encrypted password which can be used to get an

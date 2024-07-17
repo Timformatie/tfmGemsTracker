@@ -4,12 +4,14 @@
 \alias{decode_url_key}
 \title{decode_url_key}
 \usage{
-decode_url_key(hash_key, url_key, debug = FALSE)
+decode_url_key(hash_key, url_key, gunzip = FALSE, debug = FALSE)
 }
 \arguments{
 \item{hash_key}{Key that is given to decrypt}
 
 \item{url_key}{Encrypted key retrieved from the url}
+
+\item{gunzip}{Whether to gunzip the key after decoding.}
 
 \item{debug}{Whether to enable debugging messages.}
 }
