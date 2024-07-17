@@ -26,7 +26,7 @@ decode_url_key <- function(hash_key, url_key, gunzip = FALSE, debug = FALSE) {
   }
 
   # Decode key
-  key_raw <- openssl::base64_decode(URLdecode(padded_string))
+  key_raw <- openssl::base64_decode(URLdecode(url_key))
 
   # Unzip string if compressed
   if (gunzip) {
