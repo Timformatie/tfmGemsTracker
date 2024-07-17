@@ -113,7 +113,7 @@ close_connection <- function(con) {
     if (isOpen(con)) {
       close(con)
     }
-  }, error = function() {
+  }, error = function(e) {
     print("Unable to close connection")
   })
 }
