@@ -16,9 +16,17 @@
 #' @importFrom logr log_print
 #' @importFrom openssl aes_cbc_decrypt base64_decode
 #' @importFrom utils URLdecode
-decode_url_key <- function(hash_key, url_key, debug = FALSE) {
+decode_url_key <- function(hash_key, url_key, gunzip = FALSE, debug = FALSE) {
 
-  key_decoded <- rawToChar(openssl::base64_decode(URLdecode(url_key)))
+  key_raw <- openssl::base64_decode(URLdecode(url_key))
+
+  # Unzip string if compressed
+  if (gunzip) {
+    key_raw <- memDecompress(key_raw, type = "gzip")
+  }
+
+  key_decoded <- rawToChar(key_raw)
+
   if (debug) {
     logr::log_print(
       glue::glue("Decoded key is: {key_decoded}"), console = FALSE
@@ -71,49 +79,4 @@ decode_url_key <- function(hash_key, url_key, debug = FALSE) {
     group = key_elements[["group"]]
   ))
 
-}
-
-#' decompress_key
-#'
-#' @description Decompress a gz compressed key.
-#'
-#' @param key GZ compressed key.
-#'
-#' @return Decompressed key.
-#'
-#' @export
-decompress_key <- function(key) {
-  # Convert compressed key to a character
-  compressed <- charToRaw(paste0(key, "\n"))
-
-  # Create a raw connection
-  raw_connection <- rawConnection(compressed, "r")
-
-  # Create a gzcon connection
-  gz_connection <- gzcon(raw_connection)
-
-  # Read the uncompressed data
-  uncompressed <- readLines(gz_connection)
-
-  # Close the connections
-  close_connection(gz_connection)
-  close_connection(raw_connection)
-
-  return(uncompressed)
-}
-
-#' close_connection
-#'
-#' @description
-#' Try-catch wrapper to close a connection.
-#'
-#' @param con Open connection.
-close_connection <- function(con) {
-  tryCatch({
-    if (isOpen(con)) {
-      close(con)
-    }
-  }, error = function(e) {
-    print("Unable to close connection")
-  })
 }
