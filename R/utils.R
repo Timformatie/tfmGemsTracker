@@ -96,8 +96,24 @@ decompress_key <- function(key) {
   uncompressed <- readLines(gz_connection)
 
   # Close the connections
-  try(close(gz_connection))
-  try(close(raw_connection))
+  close_connection(gz_connection)
+  close_connection(raw_connection)
 
   return(uncompressed)
+}
+
+#' close_connection
+#'
+#' @description
+#' Try-catch wrapper to close a connection.
+#'
+#' @param con Open connection.
+close_connection <- function(con) {
+  tryCatch({
+    if (isOpen(con)) {
+      close(con)
+    }
+  }, error = function() {
+    print("Unable to close connection")
+  })
 }
