@@ -96,8 +96,8 @@ decompress_key <- function(key) {
   uncompressed <- readLines(gz_connection)
 
   # Close the connections
-  close(gz_connection)
-  close(raw_connection)
+  try(close(gz_connection))
+  try(close(raw_connection))
 
   return(uncompressed)
 }
