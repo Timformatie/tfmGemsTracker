@@ -1,4 +1,4 @@
-#' Decode url key
+#' decode_url_key
 #'
 #' @description Decode the key in the url to get a password for the access
 #'   token.
@@ -71,4 +71,33 @@ decode_url_key <- function(hash_key, url_key, debug = FALSE) {
     group = key_elements[["group"]]
   ))
 
+}
+
+#' decompress_key
+#'
+#' @description Decompress a gz compressed key.
+#'
+#' @param key GZ compressed key.
+#'
+#' @return Decompressed key.
+#'
+#' @export
+decompress_key <- function(key) {
+  # Convert compressed key to a character
+  compressed <- charToRaw(paste0(key, "\n"))
+
+  # Create a raw connection
+  raw_connection <- rawConnection(compressed, "r")
+
+  # Create a gzcon connection
+  gz_connection <- gzcon(raw_connection)
+
+  # Read the uncompressed data
+  uncompressed <- readLines(gz_connection)
+
+  # Close the connections
+  close(gz_connection)
+  close(raw_connection)
+
+  return(uncompressed)
 }

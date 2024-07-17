@@ -1,14 +1,13 @@
 Package: tfmGemsTracker
 Type: Package
 Title: GemsTracker functions
-Version: 0.2.5
+Version: 0.2.6
 Author: Timformatie
 Maintainer: The package maintainer <tim.eeftink@timformatie.nl>
 Description: Utility functions for retrieving and working with GemsTracker data.
 Encoding: UTF-8
 LazyData: true
 Imports:
-  config (>= 0.3.1),
   data.table (>= 1.14.2),
   glue (>= 1.6.0),
   httr (>= 1.4.2),
@@ -17,7 +16,7 @@ Imports:
   openssl (>= 1.4.6)
 Depends: 
     R (>= 2.10)
-RoxygenNote: 7.1.2
+RoxygenNote: 7.3.2
 License: GPL (>= 3)
 Suggests: 
     testthat (>= 3.0.0)
