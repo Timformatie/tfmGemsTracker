@@ -19,13 +19,21 @@
 #' @importFrom utils URLdecode
 decode_url_key <- function(hash_key, url_key, gunzip = FALSE, debug = FALSE) {
 
-  key_raw <- openssl::base64_decode(URLdecode(url_key))
+  # Replace underscores and add padding if key is gzipped
+  if (gunzip) {
+    url_key <- chartr("-_", "+/", url_key)
+    url_key <- paste0(url_key, strrep("=", (4 - nchar(url_key) %% 4) %% 4))
+  }
+
+  # Decode key
+  key_raw <- openssl::base64_decode(URLdecode(padded_string))
 
   # Unzip string if compressed
   if (gunzip) {
     key_raw <- memDecompress(key_raw, type = "gzip")
   }
 
+  # Decode key
   key_decoded <- rawToChar(key_raw)
 
   if (debug) {
