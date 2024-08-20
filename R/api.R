@@ -649,6 +649,7 @@ get_model_mapper <- function(
 #' @param check_ssl Whether to check the SSL certificate or allow insecure
 #'   connections.
 #'
+#' @export
 #' @importFrom glue glue
 #' @importFrom httr add_headers config POST
 add_questionnaire <- function(
@@ -707,6 +708,7 @@ add_questionnaire <- function(
 #' @param check_ssl Whether to check the SSL certificate or allow insecure
 #'   connections.
 #'
+#' @export
 #' @importFrom glue glue
 #' @importFrom httr add_headers config PATCH
 change_execution_period <- function(

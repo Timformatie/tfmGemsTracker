@@ -101,6 +101,7 @@ decode_url_key <- function(hash_key, url_key, gunzip = FALSE, debug = FALSE) {
 #'
 #' @return String containing the encoded return url.
 #'
+#' @export
 #' @importFrom glue glue
 #' @importFrom openssl base64_encode
 get_return_url <- function(
