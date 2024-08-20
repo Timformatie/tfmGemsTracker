@@ -4,9 +4,9 @@
 \alias{get_return_url}
 \title{Get return url}
 \usage{
-get_return_url(api_info, patient_id, organisation_id, environment)
+get_return_url(api_info, patient_id, organisation_id, environment, short_url)
 
-get_return_url(api_info, patient_id, organisation_id, environment)
+get_return_url(api_info, patient_id, organisation_id, environment, short_url)
 }
 \arguments{
 \item{api_info}{List with api information.}
@@ -16,6 +16,8 @@ get_return_url(api_info, patient_id, organisation_id, environment)
 \item{organisation_id}{Organisation identifier.}
 
 \item{environment}{One of: ["production", "acceptance", "testing"].}
+
+\item{short_url}{Use short url format (for Pulse Next).}
 }
 \value{
 String containing the encoded return url.

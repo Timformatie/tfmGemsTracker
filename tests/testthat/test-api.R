@@ -7,7 +7,8 @@ test_that("get_return_url() returns correctly encoded url", {
     api_info,
     patient_id = Sys.getenv("PATIENT_ID"),
     organisation_id = Sys.getenv("ORGANIZATION_ID"),
-    environment = Sys.getenv("APP_ENV")
+    environment = Sys.getenv("APP_ENV"),
+    short_url = FALSE
   )
   expect_false(grepl("http", return_url))
   expect_false(grepl(Sys.getenv("PATIENT_ID"), return_url))
