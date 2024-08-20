@@ -92,22 +92,31 @@ decode_url_key <- function(hash_key, url_key, gunzip = FALSE, debug = FALSE) {
 
 #' get_return_url
 #'
-#' @param base_url Base url to return to.
+#' @description Create a redirect link to return from Gems to the dashboard.
+#'
+#' @param api_info List with api information.
 #' @param patient_id Patient identifier.
 #' @param organisation_id Organisation identifier.
 #' @param environment One of: ["production", "acceptance", "testing"].
 #'
-#' @import data.table
+#' @return String containing the encoded return url.
+#'
+#' @importFrom glue glue
 #' @importFrom openssl base64_encode
-get_return_url <- function(base_url, patient_id, organisation_id, environment){
+get_return_url <- function(
+  api_info,
+  patient_id,
+  organisation_id,
+  environment
+){
   # Build complete url from parts
-  url <- paste0(
-    base_url, "respondent/r-dashboard/id1/", patient_id,
-    "/id2/", organisation_id, "/redirect/1"
+  url_output <- glue::glue(
+    "{api_info$base_url}respondent/r-dashboard/id1/{patient_id}/id2/",
+    "{organisation_id}/redirect/1"
   )
 
   # Encode url
-  url_encoded <- URLencode(base64_encode(url), reserved = TRUE)
+  url_encoded <- URLencode(openssl::base64_encode(url_output), reserved = TRUE)
 
   return(url_encoded)
 }
