@@ -89,3 +89,45 @@ decode_url_key <- function(hash_key, url_key, gunzip = FALSE, debug = FALSE) {
   ))
 
 }
+
+#' get_return_url
+#'
+#' @description Create a redirect link to return from Gems to the dashboard.
+#'
+#' @param api_info List with api information.
+#' @param patient_id Patient identifier.
+#' @param organisation_id Organisation identifier.
+#' @param environment One of: ["production", "acceptance", "testing"].
+#' @param short_url Use short url format (for Pulse Next).
+#'
+#' @return String containing the encoded return url.
+#'
+#' @export
+#' @importFrom glue glue
+#' @importFrom openssl base64_encode
+get_return_url <- function(
+  api_info,
+  patient_id,
+  organisation_id,
+  environment,
+  short_url
+){
+  # Build complete url from parts
+  url_output <- glue::glue(
+    "{api_info$base_url}respondent/r-dashboard/id1/{patient_id}/id2/",
+    "{organisation_id}/redirect/1"
+  )
+
+  # Change url if short url is selected
+  if (short_url) {
+    url_output <- glue::glue(
+      "{api_info$base_url}respondent/r-dashboard/{patient_id}/",
+      "{organisation_id}?return=1"
+    )
+  }
+
+  # Encode url
+  url_encoded <- URLencode(openssl::base64_encode(url_output), reserved = TRUE)
+
+  return(url_encoded)
+}
