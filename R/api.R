@@ -66,6 +66,7 @@ get_access_token <- function(api_info, check_ssl = TRUE, debug = FALSE) {
     ), console = FALSE)
   }
 
+  message(paste("Gems POST request:", api_info$token_url))
   response <- httr::POST(
     api_info$token_url,
     body = list(grant_type = "password",
@@ -120,7 +121,8 @@ get_query_data <- function(
       glue::glue("Try to retrieve data from {url}"), console = FALSE
     )
   }
-  # start.time <- Sys.time()
+
+  message(paste("Gems GET request:", url))
   req <- httr::GET(
     url,
     httr::add_headers(
@@ -198,6 +200,7 @@ get_careplan_info <- function(
   title <- NULL # Avoid NSE errors
 
   careplan_url = paste0(base_careplan_url, patient_id)
+
   dt_careplan <- get_query_data(
     url = careplan_url,
     token = access_token,
@@ -348,6 +351,7 @@ get_patient_info <- function(
 ) {
 
   patient_url = paste0(base_patient_url, patient_id)
+
   patient_info <- get_query_data(
     url = patient_url,
     token = access_token,
@@ -393,6 +397,7 @@ get_organisations <- function(
 ) {
 
   organisation_url <- glue::glue("{base_organisation_url}{patient_number}/{organisation_id}")
+
   dt_organisations <- get_query_data(
     url = organisation_url,
     token = access_token,
@@ -505,6 +510,7 @@ get_new_token <- function(
 
   new_token_url <- paste0(api_info$new_token_url, old_token)
 
+  message(paste("Gems PATCH request:", new_token_url))
   res <- httr::PATCH(
     new_token_url,
     body = list(comment = "Update token"),
@@ -550,6 +556,8 @@ post_activity_log <- function(
       glue::glue("Posting data to {activity_log_url}"), console = FALSE
     )
   }
+
+  message(paste("Gems POST request:", activity_log_url))
   res <- httr::POST(
     activity_log_url,
     body = body,
@@ -620,6 +628,7 @@ get_model_mapper <- function(
     "{base_model_mapper_url}{dataset}?patientNr={patient_number}&",
     "organizationId={organisation_id}&respondentTrack={respondent_track_id}"
   )
+
   dt_model_mapper <- get_query_data(
     url = model_mapper_url,
     token = access_token,
@@ -673,6 +682,7 @@ add_questionnaire <- function(
     roundOrder = round_order
   )
 
+  message(paste("Gems POST request:", api_info$insert_questionnaire))
   res <- httr::POST(
     api_info$insert_questionnaire,
     body = json_data,
@@ -727,6 +737,7 @@ change_execution_period <- function(
     )
   )
 
+  message(paste0("Gems PATCH request: ", api_info$task_url_clean, token_id))
   res <- httr::PATCH(
     glue::glue("{api_info$task_url_clean}{token_id}"),
     body = json_data,
